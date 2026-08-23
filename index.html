@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP tight-mark-brand-palette-r5 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP generated-card-art-r6 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -213,7 +213,25 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .glyph{width:30px;height:30px;border-radius:10px}
 .glyph svg{width:16px;height:16px}
 .odesc{margin-top:1px}
-.tile{min-height:78px;padding:12px 12px}
+/* ---------- business-type cards, restructured ----------
+   Reza: custom branded icons, top right, slightly faded, and larger type. Moving the art out of
+   the text's way entirely — a corner motif rather than a bullet — is what buys the extra type
+   size. Anchoring text bottom-left and art top-right also means a long name wraps INTO empty
+   space instead of into the glyph. */
+.tile{min-height:88px;padding:12px 13px;position:relative;overflow:hidden;justify-content:flex-end}
+/* ⛔ FULLY INSIDE THE CARD, not bleeding off the corner. My first pass had this at top:-8px
+   right:-10px, so the scissors and the book were sliced by the card edge. Bleeding art is a real
+   technique, but "the icon looks cut off" is the exact complaint Reza has raised three times on
+   this screen — deliberate clipping and a bug look identical to the person looking at it. The
+   test below asserts the art sits inside its tile, so this cannot drift back. */
+.tile .tart{position:absolute;top:9px;right:9px;width:52px;height:52px;object-fit:contain;
+  opacity:.32;pointer-events:none;
+  transition:opacity 200ms var(--ease),transform 240ms var(--ease)}
+.tile.sel .tart{opacity:.58;transform:scale(1.05) rotate(-3deg)}
+.tile .tname,.tile .tsub{position:relative;z-index:1}
+.tile .tname{font-size:15px;line-height:1.2;padding-right:26px}
+.tile .tsub{font-size:12px;margin-top:3px;padding-right:8px}
+.tile.hasart svg{display:none}
 .chips{margin-top:10px;gap:7px}
 .sm{margin-top:8px}
 
@@ -596,6 +614,11 @@ function makeTypeable(html) {
 // ⇒ Icons are now keyed BY CATEGORY NAME and swapped on the live DOM, and any tile we don't have
 // an icon for is pushed to `window.__iconMisses` so a test can fail on it. A silent no-op is not
 // allowed to be the outcome a third time.
+const TILEART = {
+  'cafe or restaurant': 'cardicons/cafe.png', 'salon or barber': 'cardicons/salon.png',
+  'clinic or aesthetics': 'cardicons/clinic.png', 'shop or product': 'cardicons/shop.png',
+  'trades and home': 'cardicons/trades.png', 'classes or studio': 'cardicons/classes.png',
+};
 const TILEICON = {
   'cafe or restaurant': '<path d="M4 8h13v6a5 5 0 01-5 5H9a5 5 0 01-5-5V8z"/><path d="M17 9h1.8a2.7 2.7 0 010 5.4H17"/><path d="M6 3.5v1.6M10 3v2M14 3.5v1.6"/>',
   'salon or barber':    '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8 8l12 10M20 6L8.6 16"/>',
@@ -617,6 +640,16 @@ function fixIcons(root) {
     const name = ((t.querySelector('.tname') || t).innerText || '').replace(/\s+/g, ' ').trim().toLowerCase();
     const path = TILEICON[name];
     if (!path) { window.__iconMisses.push(name); return; }
+    // ⭐ The generated art is the presentation; the inline glyph stays as the FALLBACK and is only
+    // hidden once the PNG has actually decoded. If an asset 404s the card still shows a correct
+    // icon rather than an empty corner — the art is an upgrade, not a dependency.
+    const art = TILEART[name];
+    if (art) {
+      const img = new Image();
+      img.className = 'tart'; img.alt = '';
+      img.onload = () => { t.appendChild(img); t.classList.add('hasart'); };
+      img.src = art;
+    }
     svg.innerHTML = path;                       // keeps whatever stroke colour the tile already set
     svg.setAttribute('fill', 'none');
     svg.setAttribute('stroke-width', '2.1');
