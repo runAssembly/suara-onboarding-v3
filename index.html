@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP payoff-week-r9 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP boot-gate-panel-art-r10 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -23,6 +23,20 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
   --u:clamp(.72px, .1vh + .05vw, 1.06px);}
 .shell{width:min(460px,100%);height:100dvh;background:#FBF4EA;overflow:hidden;position:relative;
   display:flex;flex-direction:column}
+/* ⛔⛔ YOU COULD WATCH IT ASSEMBLE. Measured on a throttled connection: at ~615ms the page showed a
+   BACK BUTTON and a button reading "Continue" on an empty screen, and at ~1378ms it flipped to the
+   welcome with the button reading "Get started". Two distinct wrong states before the right one.
+   Cause: the chrome is real HTML in the document with placeholder text, so the browser paints it
+   the moment it parses, while the script that corrects it runs later. Server-rendered chrome that
+   only JS can make correct is a guaranteed flash.
+   ⇒ The shell stays invisible until the first screen has been measured, scaled and revealed AND
+   the webfont has loaded — then the whole thing fades in as one object. `visibility` rather than
+   `display` so layout is still computed underneath and the fit maths has real numbers to measure.
+   A `boot` class is on the shell in the markup, so this holds even if the script never runs at
+   all — in which case the timeout below still reveals it rather than leaving a blank page. */
+.shell.boot{visibility:hidden}
+.shell{transition:opacity 260ms var(--ease)}
+.shell.boot{opacity:0}
 @media (min-width:900px){
   body{background:#EFE7DA;align-items:center}
   .shell{height:min(920px,96dvh);border-radius:30px;
@@ -238,6 +252,10 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
    technique, but "the icon looks cut off" is the exact complaint Reza has raised three times on
    this screen — deliberate clipping and a bug look identical to the person looking at it. The
    test below asserts the art sits inside its tile, so this cannot drift back. */
+/* it mounts on load, so without this it POPS in — the same 'watching it assemble' complaint
+   in miniature. `from` only, so it animates up to whatever opacity the state calls for. */
+@keyframes artIn{from{opacity:0}}
+.tart{animation:artIn 320ms var(--ease) both}
 .tile .tart{position:absolute;top:9px;right:9px;width:52px;height:52px;object-fit:contain;
   opacity:.32;pointer-events:none;
   transition:opacity 200ms var(--ease),transform 240ms var(--ease)}
@@ -298,7 +316,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 /* the mark ships with a transparent background and its own warm gradient, so it needs no plate */
 /* the tight mark is 428x214 of ink, so a 2:1 box — no padding to see through, which means the
    gap below is the whole gap. 6px, not 7px+1.4px of the asset's own dead space. */
-.kmark{width:18px;height:9px;flex:none;display:block}
+.kmark{width:20px;height:10.8px;flex:none;display:block;object-fit:contain}
 /* ⭐ GRADIENT WORDMARK, WITH THE STOPS CHOSEN BY ARITHMETIC RATHER THAN BY EYE.
    The mark's own ramp is #FF5A45 → #FFC24B, and #FFC24B on white is 1.58:1 — invisible. At 12px
    bold this text needs 4.5:1, so the ramp is compressed to #C0341A → #AE6412, measured at 5.60:1
@@ -348,17 +366,16 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
    rare; spend it on the one row type that matters and it lands. */
 .klist .kd{width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
   background:#F4EBDD}
-.klist .kd svg{width:15px;height:15px;stroke:#3B3128;stroke-width:2.2;fill:none;
-  stroke-linecap:round;stroke-linejoin:round}
+.klist .kd img{width:24px;height:24px;object-fit:contain;display:block}
 .klist li.blocked{border-color:rgba(225,85,46,.3);background:#FFF6F2}
 .klist li.blocked .kd{background:#F6D9CD}
-.klist li.blocked .kd svg{stroke:#B23A17}
+
 .klist li.blocked .kt{color:#7A2E14}
 .klist .kt{font-size:13.5px;line-height:1.35;color:#241C15;font-weight:700;letter-spacing:-.005em}
 .klist .kw{display:block;font-size:11.5px;line-height:1.4;color:#A69A8A;margin-top:3px;
   font-weight:500}
 .khead{display:flex;align-items:center;gap:9px;margin-bottom:2px}
-.khead img{width:26px;height:13px;flex:none}
+.khead img{width:28px;height:15.1px;flex:none;object-fit:contain}
 .kempty{font-size:13.5px;color:#A69A8A;line-height:1.5;padding:6px 0 2px}
 
 /* ---------- the payoff screen ----------
@@ -482,13 +499,13 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .bmock .bbar{height:5px;border-radius:3px;width:60%;margin-bottom:4px}
 .bmock .bln{height:4px;border-radius:3px;width:82%;opacity:.5}
 </style></head><body>
-<div class="shell">
+<div class="shell boot" id="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
   <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
     <button class="known" id="known" hidden><img class="kmark" src="suara-mark-tight.svg" alt=""><span><i class="kbrand">Suara</i> knows</span><b>0</b></button></div>
   <div class="head" id="head"></div>
   <div class="stage" id="stage"></div>
-  <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
+  <div class="foot" id="foot"><button class="btn" id="go"></button>
     <button class="skip ghost" id="skip"></button></div>
   <div class="cpscrim" id="scrim"></div>
   <div class="cpsheet" id="sheet"></div>
@@ -513,6 +530,10 @@ const stage = document.getElementById('stage'), fill = document.getElementById('
 const navrow = document.getElementById('navrow'), headEl = document.getElementById('head');
 const goBtn = document.getElementById('go');
 const skipBtn = document.getElementById('skip'), backBtn = document.getElementById('back');
+const shellEl = document.getElementById('shell');
+// ⛔ last-resort reveal: if anything above throws, the page must not stay blank forever.
+// A loading state that can get stuck is worse than the flash it replaced.
+setTimeout(() => shellEl.classList.remove('boot'), 2500);
 backBtn.innerHTML = svg('arrow');
 let i = 0, lastScale = 1;
 const answers = {};   // screen index -> {text, picked:Set}
@@ -891,18 +912,15 @@ function refreshKnown(bump) {
   }
 }
 
+// ⛔ These were thin black line glyphs, and next to the illustrated cards they looked unfinished —
+// Reza: "I don't like how it's just showing black like icons". Same generated art as the cards, so
+// the panel belongs to the same product rather than looking like a settings form.
 const KICON = {
-  lock:    '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/>',
-  no:      '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
-  voice:   '<path d="M12 15.5a3.5 3.5 0 003.5-3.5V6a3.5 3.5 0 00-7 0v6a3.5 3.5 0 003.5 3.5z"/><path d="M5.5 11.5A6.5 6.5 0 0018.5 11.5M12 18.5V22"/>',
-  people:  '<path d="M3 20a7 7 0 0114 0"/><circle cx="10" cy="8" r="3.6"/><path d="M16 12a5 5 0 015 8"/>',
-  cal:     '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 2.6v4.2M16 2.6v4.2M3.5 10h17"/>',
-  quote:   '<path d="M4.5 12.5v-3a3 3 0 013-3h1v6h-4zM14.5 12.5v-3a3 3 0 013-3h1v6h-4z"/><path d="M4.5 12.5c0 3 1.5 4.5 4 5M14.5 12.5c0 3 1.5 4.5 4 5"/>',
-  brush:   '<path d="M4 20l4-1 9.5-9.5a2.5 2.5 0 00-3.5-3.5L4.5 15.5 4 20z"/>',
-  target:  '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>',
+  lock:'pn-lock', no:'pn-no', voice:'pn-voice', people:'pn-people',
+  cal:'pn-cal', quote:'pn-quote', brush:'pn-brush', target:'pn-target',
 };
-// which glyph goes with which consequence — matched on the sentence we already wrote, so a new
-// fact never renders a blank tile
+// which picture goes with which consequence — matched on the sentence we already wrote, so a new
+// fact can never render an empty tile
 function kicon(x) {
   if (x.blocked) return KICON.no;
   const t = x.t.toLowerCase();
@@ -919,7 +937,7 @@ function openKnown() {
   const f = knownFacts();
   const locked = f.filter(x => !x.blocked), blocked = f.filter(x => x.blocked);
   const row = x => `<li class="${x.blocked ? 'blocked' : ''}">
-      <span class="kd"><svg viewBox="0 0 24 24">${kicon(x)}</svg></span>
+      <span class="kd"><img src="cardicons/${kicon(x)}.png" alt=""></span>
       <span class="kt">${x.t}<span class="kw">${x.w}</span></span></li>`;
   const group = (title, items) => items.length
     ? `<div class="ksec">${title}</div><ul class="klist">${items.map(row).join('')}</ul>` : '';
@@ -1311,7 +1329,18 @@ function render(rev) {
   // measure, scale, and only then reveal — this is what removed the snap
   // fit twice while still invisible (fonts and images can settle between the two), then reveal.
   // Nothing re-scales after this point, so there is no jump to see.
-  const reveal = () => { el.classList.remove('pre'); el.classList.add('in'); };
+  const reveal = () => {
+    el.classList.remove('pre'); el.classList.add('in');
+    // first paint only: the shell has been hiding the half-built chrome until now
+    if (shellEl.classList.contains('boot')) {
+      const show = () => shellEl.classList.remove('boot');
+      // wait for the webfont too, or the text reflows immediately after we fade in — but never
+      // hang on it: a font that fails to load must not leave the page blank.
+      if (document.fonts && document.fonts.ready) {
+        Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1200))]).then(show);
+      } else show();
+    }
+  };
   const imgs = [...fit.querySelectorAll('img')].filter(im => !im.complete);
   Promise.all(imgs.map(im => new Promise(r => {
     im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true });
