@@ -1,6 +1,9 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
+<!-- BUILDSTAMP chrome-outside-stage-r1 — a string written in THIS build. The deploy probe greps
+     for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
+     liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
 <style>
 :root{
@@ -25,22 +28,61 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
   .shell{height:min(920px,96dvh);border-radius:30px;
     box-shadow:0 40px 90px -50px rgba(60,40,25,.55);border:1px solid rgba(36,28,21,.08)}
 }
-.stage{position:relative;flex:1;overflow:hidden}
+/* ⛔⛔ THE CHROME USED TO LIVE INSIDE THE SCALED BOX. Reza, 23 Aug: "its making different pages
+   inconsistent with their header sizes and other components". He was right, and it was structural.
+   Every screen rendered its own nav row, its own title block and its own button INSIDE `.fit`, and
+   `.fit` gets a per-screen scale so it fits. So a content-heavy screen scaled to 0.85 and shrank
+   its own header, while the next screen sat at 1.0 — measured: nav row 52px tall on one screen and
+   44px on the next, sitting at different heights on the page. No amount of tuning fixes that,
+   because the header was downstream of how much CONTENT the screen happened to have.
+   ⇒ The bar, the nav row, the title block and the button are now SHELL chrome. They are rendered
+   once, they live outside `.stage`, and they are never scaled. The only thing that can flex is the
+   answer area. The headers are now identical across screens BY CONSTRUCTION rather than because a
+   test says so — a whole class of bug is gone rather than guarded. (better-layout #8: sticky chrome
+   floats above the content layer, it doesn't dam it.) */
+.stage{position:relative;flex:1;overflow:hidden;min-height:0}
 .scr{position:absolute;inset:0;overflow:hidden}
+/* ⭐⭐ THE NO-SCROLL RULE, RESTATED HONESTLY. Measured 23 Aug: on an iPhone the answer area is
+   ~340px and eleven of the nineteen screens hold 400–920px of content. "Never scroll" was
+   therefore being delivered by shrinking — down to 60% on the first-week screen — and shrinking is
+   exactly what made the pages look inconsistent to Reza. You cannot fit 920px into 340px; you can
+   only lie about it.
+   ⇒ The promise that is worth keeping is the one he actually cares about: THE QUESTION, THE ANSWER
+   AND THE BUTTON ARE ALWAYS VISIBLE, AT THE SAME SIZE, ON EVERY SCREEN. That is now guaranteed by
+   the chrome living outside the stage. Below 90% we stop shrinking and let the ANSWER LIST scroll
+   inside its own box — never the page, never the header, never the button. A list of seven
+   categories that scrolls is normal; a page rendered at 60% is not. */
+.scr.scrolls{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none}
+.scr.scrolls::-webkit-scrollbar{display:none}
+.scr.scrolls .fit{position:relative;min-height:0}
+/* better-layout #5: hidden content needs a visible cue, or it may as well not exist */
+.stage.hasScroll::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34px;
+  background:linear-gradient(to top,#FBF4EA,rgba(251,244,234,0));pointer-events:none;z-index:4}
 .fit{position:absolute;top:0;left:0;right:0;display:flex;flex-direction:column;
   min-height:100%;transform-origin:top center;will-change:transform}
 /* natural height — never squashed, so nothing can spill under the footer */
 .scr .body{flex:1 0 auto;min-height:0}
-.scr .foot{margin-top:auto}
 
 /* container fades, children translate — split across DOM levels so it reads as one soft object */
 /* held invisible until it has been measured and scaled — nothing animates before it fits */
 .scr.pre{opacity:0}
+/* ⛔⛔ THE BUG BEHIND "the back button breaks everything". The direction marker on the screen was
+   `.back` — the SAME class name as the back BUTTON. So pressing back put `class="scr back"` on the
+   screen, which picked up the button's rules: width:34px, height:34px, border-radius:50%,
+   display:grid. The screen became a circle the size of a button, its content reflowed into a
+   sliver, and the fit maths measured 1073px of content into 34px of space and clamped to the 0.45
+   floor. Every back press, every screen, not intermittent — the probe caught all eight.
+   The direction modifier is now `.rev`. `.back` means the button and nothing else. */
 @media (prefers-reduced-motion:no-preference){
   .scr.in{animation:fade var(--t-in) var(--ease) both}
   .scr.in .anim{animation:rise var(--t-in) var(--ease) both;animation-delay:var(--d,0ms)}
   .scr.out{animation:fadeOut var(--t-out) var(--ease) both}
-  .scr.in.back .anim{animation-name:riseBack}
+  .scr.in.rev .anim{animation-name:riseBack}
+  /* the chrome text swaps in place with the same motion, so the header reads as one steady object
+     whose label changes rather than a header that is rebuilt every step */
+  .chrome-in .anim{animation:rise var(--t-in) var(--ease) both;animation-delay:var(--d,0ms)}
+  .chrome-in.rev .anim{animation-name:riseBack}
 }
 @keyframes fade{from{opacity:0}to{opacity:1}}
 /* the outgoing screen drifts a little and dims rather than cutting — it overlaps the incoming
@@ -58,6 +100,9 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .bar i{position:absolute;inset:0 auto 0 0;background:#E1552E;border-radius:0 3px 3px 0;
   transition:width var(--t-prog) var(--ease)}
 .navrow{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex:none}
+/* our own display:flex beats the UA [hidden] rule, so say it explicitly or the welcome screen
+   keeps a phantom nav row */
+.navrow[hidden],.foot[hidden]{display:none}
 .back{width:34px;height:34px;border-radius:50%;border:1px solid rgba(36,28,21,.14);background:#fff;
   display:grid;place-items:center;cursor:pointer;color:#241C15;-webkit-appearance:none;appearance:none;
   padding:0;transition:opacity 160ms,transform 160ms}
@@ -66,13 +111,21 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .back:active{transform:scale(.94)}
 .pos{margin-left:auto;font-size:12.5px;color:#A69A8A;font-weight:600;letter-spacing:.02em}
 
-.body{padding:calc(6*var(--u)) calc(24*var(--u)) calc(14*var(--u));flex:1;min-height:0}
+/* the title block is CHROME, not content: same place, same size, on every question. Only its
+   words change. This is the half of the fix that Reza actually sees. */
+.head{padding:calc(2*var(--u)) calc(24*var(--u)) 0;flex:none}
+.head:empty{display:none}
+.body{padding:calc(12*var(--u)) calc(24*var(--u)) calc(14*var(--u))}
 .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
   margin-bottom:10px}
 h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
-.sub{font-size:clamp(13px, calc(15*var(--u)), 16px);line-height:1.5;color:#7C7062;
-  margin-bottom:calc(14*var(--u))}
-.foot{padding:0 calc(24*var(--u)) calc(20*var(--u));flex:none}
+.sub{font-size:clamp(13px, calc(15*var(--u)), 16px);line-height:1.5;color:#7C7062;margin:0}
+/* ⭐ The skip row is ALWAYS in the DOM and only its visibility changes. If it were added and
+   removed the footer would be two different heights, the content area would jump by ~30px between
+   steps, and we would be back to the inconsistency he complained about — just in a subtler place
+   that a screenshot would not obviously show. Reserve the space. */
+.foot{padding:calc(10*var(--u)) calc(24*var(--u)) calc(20*var(--u));flex:none}
+.skip.ghost{visibility:hidden;pointer-events:none}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#241C15;color:#fff;
   border:0;width:100%;padding:calc(15*var(--u));border-radius:100px;font:inherit;
   font-size:clamp(14px, calc(16*var(--u)), 17px);font-weight:700;
@@ -147,10 +200,31 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .cn{font-size:15px;font-weight:700;color:#241C15}
 .cd{font-size:13px;color:#7C7062;grid-column:2}
 .note{margin-top:14px;font-size:13px;color:#A69A8A;line-height:1.5}
+
+/* ---------- density ----------
+   Ten of nineteen screens needed an internal scroll on an iPhone, and the single biggest cause was
+   the option row: a 38px glyph inside 14px of padding is a 77px row, so four choices ate 308px of
+   a 356px answer area before the question was even counted. Tightened to ~52px, which is still
+   well above a 44px touch target and gets most screens back to fitting outright. Overridden here
+   rather than in flow-shared.css because the other prototypes still render against that file. */
+.opts{margin-top:10px;gap:7px}
+.opt{padding:10px 13px;gap:11px}
+.opt.sel{padding:9px 12px}
+.glyph{width:30px;height:30px;border-radius:10px}
+.glyph svg{width:16px;height:16px}
+.odesc{margin-top:1px}
+.tile{min-height:78px;padding:12px 12px}
+.chips{margin-top:10px;gap:7px}
+.sm{margin-top:8px}
 </style></head><body>
 <div class="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
+  <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
+    <span class="pos" id="pos"></span></div>
+  <div class="head" id="head"></div>
   <div class="stage" id="stage"></div>
+  <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
+    <button class="skip ghost" id="skip"></button></div>
 </div>
 
 <script src="screens-data.js"></script>
@@ -169,7 +243,11 @@ const IC = {
 const svg = (k, col) => `<svg viewBox="0 0 24 24" fill="none" stroke="${col||'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stage = document.getElementById('stage'), fill = document.getElementById('fill');
-let i = 0;
+const navrow = document.getElementById('navrow'), headEl = document.getElementById('head');
+const posEl = document.getElementById('pos'), goBtn = document.getElementById('go');
+const skipBtn = document.getElementById('skip'), backBtn = document.getElementById('back');
+backBtn.innerHTML = svg('arrow');
+let i = 0, lastScale = 1;
 const answers = {};   // screen index -> {text, picked:Set}
 
 function stateFor(k) {
@@ -212,8 +290,11 @@ function bindState(el, k) {
 const Q = S.filter(s => !s.welcome);
 const LAST = Q.length + 1;
 
+// Each screen now returns its PARTS, not a finished page: the chrome slots are filled by the
+// shell, and only `body` is mounted into the stage. That is what makes the header impossible to
+// drift — no screen is in a position to render a header of its own.
 function welcome() {
-  return `<div class="wel">
+  return { btn: 'Get started', body: `<div class="wel">
     <div class="brand anim"><img src="suara-mark.svg" alt=""><b>súara</b></div>
     <div class="stagewrap anim" style="--d:60ms">
       <div class="stack">
@@ -231,8 +312,7 @@ function welcome() {
         <button class="on">Bahasa Melayu</button><button>English</button>
       </div>
     </div>
-  </div>
-  <div class="foot anim" style="--d:160ms"><button class="btn" id="go">Get started</button></div>`;
+  </div>` };
 }
 
 // ⛔ Screen 17's own body carries "STEP 17 OF 17" — the false total, baked into the content
@@ -262,50 +342,84 @@ function fixIcons(html) {
 }
 
 function question(s) {
-  return `<div class="navrow anim"><button class="back" id="back" aria-label="Back">${svg('arrow')}</button>
-      <span class="pos">${s.t || ''}</span></div>
-    <div class="body">
-      <div class="eyebrow anim" style="--d:30ms">${noTotal(s.eb)}</div>
-      <h1 class="anim" style="--d:60ms">${noTotal(s.h)}</h1>
-      <div class="sub anim" style="--d:90ms">${noTotal(s.sub)}</div>
-      <div class="anim" style="--d:120ms">${noTotal(s.body)}</div>
-    </div>
-    <div class="foot anim" style="--d:150ms">
-      <button class="btn" id="go">${noTotal(s.btn) || 'Continue'}</button>
-      ${s.skip ? `<button class="skip" id="skip">${s.skip}</button>` : ''}
-    </div>`;
+  return {
+    pos: s.t || '',
+    eb:  noTotal(s.eb),
+    h:   noTotal(s.h),
+    sub: noTotal(s.sub),
+    btn: noTotal(s.btn) || 'Continue',
+    skip: s.skip || '',
+    body: `<div class="body"><div class="anim" style="--d:40ms">${
+      makeTypeable(fixIcons(noTotal(s.body)))}</div></div>`,
+  };
 }
 
 function create() {
-  return `<div class="navrow anim"><button class="back" id="back" aria-label="Back">${svg('arrow')}</button></div>
-    <div class="body">
-      <div class="eyebrow anim" style="--d:30ms">Last one</div>
-      <h1 class="anim" style="--d:60ms">Now let's make<br>your first week.</h1>
-      <div class="sub anim" style="--d:90ms">We've ticked a good opening mix. Change it if you
-        want — or leave it and we'll get on with it.</div>
-      <div class="cats anim" style="--d:120ms">${CATS_HTML}</div>
-      <p class="note anim" style="--d:150ms">You approve everything before it goes anywhere.
+  return {
+    pos: '', eb: 'Last one',
+    h: "Now let's make<br>your first week.",
+    sub: "We've ticked a good opening mix. Change it if you want — or leave it and we'll get on with it.",
+    btn: 'Make my week', accent: true, skip: 'Just run a good mix',
+    body: `<div class="body">
+      <div class="cats anim" style="--d:40ms">${CATS_HTML}</div>
+      <p class="note anim" style="--d:80ms">You approve everything before it goes anywhere.
         Nothing posts by itself.</p>
-    </div>
-    <div class="foot anim" style="--d:180ms">
-      <button class="btn accent" id="go">Make my week</button>
-      <button class="skip" id="skip">Just run a good mix</button>
-    </div>`;
+    </div>`,
+  };
 }
 
-function render(back) {
+// ⛔ These listeners used to be registered INSIDE render(), once per screen, and never removed —
+// after twenty steps there were twenty of them, each holding a detached element alive. One
+// listener that calls whatever the current screen's refit is.
+let currentRefit = () => {};
+const typing = () => document.activeElement &&
+  document.activeElement.matches('[contenteditable],input,textarea');
+addEventListener('resize', () => currentRefit());
+if (window.visualViewport) window.visualViewport.addEventListener('resize', () => {
+  // ⛔ On iOS the keyboard opening IS a visualViewport resize. Refitting then measures against a
+  // half-covered screen and shrinks everything to the floor mid-sentence. Never re-fit while
+  // they are typing — the layout they are looking at must not move under their hands.
+  if (!typing()) currentRefit();
+});
+
+function render(rev) {
   const old = stage.querySelector('.scr');
   if (old) {
-    old.classList.remove('in'); old.classList.add('out'); if (back) old.classList.add('back');
+    old.classList.remove('in'); old.classList.add('out');
     // ⛔ 170ms, not 20ms: an earlier build stripped the class before the out-animation finished,
     // so under reduced motion the fade never completed and the screen snapped.
     setTimeout(() => old.remove(), reduce ? 0 : 230);
   }
+
+  const p = i === 0 ? welcome() : (i === LAST ? create() : question(Q[i - 1]));
+
+  // ---- chrome: filled, never rebuilt, never scaled ----
+  navrow.hidden = (i === 0);
+  backBtn.hidden = (i === 0);
+  // ⛔ textContent, not innerHTML, printed "Skip &mdash; I will come back to this" verbatim on
+  // screen 5. The source copy contains HTML entities; textContent does not decode them. Caught in
+  // a screenshot, not by any assertion — so the entity check below now runs on every screen.
+  posEl.innerHTML = p.pos || '';
+  headEl.innerHTML = (p.eb || p.h || p.sub)
+    ? `<div class="eyebrow anim" style="--d:0ms">${p.eb || ''}</div>
+       <h1 class="anim" style="--d:30ms">${p.h || ''}</h1>
+       ${p.sub ? `<div class="sub anim" style="--d:60ms">${p.sub}</div>` : ''}`
+    : '';
+  goBtn.innerHTML = p.btn || 'Continue';
+  goBtn.classList.toggle('accent', !!p.accent);
+  skipBtn.innerHTML = p.skip || '';
+  skipBtn.classList.toggle('ghost', !p.skip);
+  // replay the title motion in place. Only the head animates: a nav row and a button that hold
+  // perfectly still while the question changes are what make the flow feel like one screen you
+  // are moving through rather than a deck of slides.
+  headEl.classList.remove('chrome-in', 'rev'); void headEl.offsetWidth;
+  headEl.classList.add('chrome-in'); if (rev) headEl.classList.add('rev');
+
   const el = document.createElement('div');
-  el.className = 'scr pre' + (back ? ' back' : '');
+  el.className = 'scr pre' + (rev ? ' rev' : '');
   const fit = document.createElement('div');
   fit.className = 'fit';
-  fit.innerHTML = i === 0 ? welcome() : (i === LAST ? create() : makeTypeable(fixIcons(question(Q[i - 1]))));
+  fit.innerHTML = p.body;
   el.appendChild(fit);
   if (i === LAST && !answers[LAST]) {
     const st = stateFor(LAST);
@@ -330,20 +444,21 @@ function render(back) {
     // scale never converged (measured: 755 unscaled vs 859 scaled, settling at the wrong k).
     // Scale only. A narrower column at small sizes is a cosmetic cost; a scrollbar is not allowed.
     fit.style.transform = 'none';
-    const bodyEl = fit.querySelector('.body') || fit.querySelector('.wel');
-    const footEl = fit.querySelector('.foot');
-    const navEl  = fit.querySelector('.navrow');
-    // ⛔ scrollHeight lied again. The body is a squashed flex child with visible overflow, so it
-    // reported 363px while its children genuinely occupied more — need came out UNDER the
-    // available height, no scale was applied, and the Continue button sat on top of the content.
-    // Measure the real ink: the union of the children's boxes.
+    el.classList.remove('scrolls'); stage.classList.remove('hasScroll');
     // with a natural-height column, offsetHeight is finally the truth
     const need = fit.offsetHeight;
-    // never clip: a smaller screen is recoverable, a hidden Continue button is not
-    const k = need > avail + 1 ? Math.max(0.45, avail / need) : 1;
-    fit.style.transform = k < 1 ? `scale(${k})` : 'none';
-    if (need > avail + 1 && avail / need < 0.45) console.warn('screen', i, 'overflows even at the floor');
+    const ratio = avail / need;
+    // ⭐ 0.90, not 0.45. A 10% nudge is invisible and keeps a screen whole; anything more was the
+    // thing Reza could see. Past that we stop pretending and scroll the answer list instead —
+    // scaling and scrolling are never mixed, so the type is either 90–100% or exactly 100%.
+    if (need <= avail + 1) { lastScale = 1; }
+    else if (ratio >= 0.90) { fit.style.transform = `scale(${ratio})`; lastScale = ratio; }
+    else {
+      lastScale = 1;
+      el.classList.add('scrolls'); stage.classList.add('hasScroll');
+    }
   }
+  currentRefit = refit;
   // measure, scale, and only then reveal — this is what removed the snap
   // fit twice while still invisible (fonts and images can settle between the two), then reveal.
   // Nothing re-scales after this point, so there is no jump to see.
@@ -362,21 +477,14 @@ function render(back) {
     if (!img.complete) img.addEventListener('load', refit, { once: true });
     img.addEventListener('error', refit, { once: true });
   });
-  // ⛔ ResizeObserver on `fit` never fires: `.fit` is inset:0, so its own box is pinned to the
-  // container and does not change when the CONTENT grows. Measured it — scale was computed
-  // against 755px while the real content settled at 859px, which is exactly the residual
-  // overflow the test kept reporting. Observe the content, and re-fit on a couple of delays for
-  // late layout (web fonts, cached images that report complete before reflow).
-  addEventListener('resize', refit);   // real viewport changes only — never while just sitting there
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', refit);
   // no total is shown anywhere — position only. The flow is 29 screens and used to claim 17.
   fill.style.width = Math.round((i / LAST) * 100) + '%';
 
-  el.querySelector('#go')?.addEventListener('click', () => { if (i < LAST) { i++; render(false); } });
-  el.querySelector('#skip')?.addEventListener('click', () => { if (i < LAST) { i++; render(false); } });
-  const b = el.querySelector('#back');
-  if (b) { if (i === 0) b.hidden = true;
-    b.addEventListener('click', () => { if (i > 0) { i--; render(true); } }); }
+  // ⛔ The chrome buttons persist across screens, so addEventListener would stack a new handler
+  // every step and one tap would jump several screens. Assign, don't add.
+  goBtn.onclick   = () => { if (i < LAST) { i++; render(false); } };
+  skipBtn.onclick = () => { if (i < LAST) { i++; render(false); } };
+  backBtn.onclick = () => { if (i > 0) { i--; render(true); } };
   bindState(el, i);
   el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
     el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
