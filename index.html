@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP chrome-outside-stage-r1 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP voice-hero-colour-picker-r2 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -216,6 +216,119 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .tile{min-height:78px;padding:12px 12px}
 .chips{margin-top:10px;gap:7px}
 .sm{margin-top:8px}
+
+/* ---------- text fields need their own surface ----------
+   Reza, 23 Aug: "the text fields could have a better background colour than having the same
+   background as the main background". He is describing better-layout #2 — a control that shares
+   the page's background is not reading as a control. A dashed outline on the same cream reads as
+   a placeholder for something missing, not as somewhere to type. White gives them a surface, the
+   inset line gives them depth, and the focus ring now lives on the CONTAINER so the whole field
+   lights up rather than a rectangle around the text node inside it. */
+.note,.field,.up{background:#fff;border-style:solid;border-color:rgba(36,28,21,.11);
+  box-shadow:inset 0 1px 2px rgba(36,28,21,.045),0 1px 0 rgba(255,255,255,.6)}
+.note:focus-within,.field:focus-within{border-color:#E1552E;
+  box-shadow:0 0 0 3px rgba(225,85,46,.15),inset 0 1px 2px rgba(36,28,21,.04)}
+/* the inner ring is now redundant and double-outlined the field */
+[contenteditable]:focus{box-shadow:none}
+.field.on{border-color:rgba(36,28,21,.28);box-shadow:inset 0 1px 2px rgba(36,28,21,.05)}
+
+/* ---------- the voice screen, given the welcome treatment ----------
+   Reza asked which other tab deserves the first tab's care. This one: our own notes call it "the
+   most valuable answer in the intake", and it was rendering as a text box with a small grey widget
+   beside it. It is also the only screen where the customer does something rather than picks
+   something. It keeps the SAME chrome as every other screen — the header and button do not move —
+   because the consistency he just asked for is worth more than a second bespoke skeleton. Only the
+   answer area is hero. */
+.vhero{display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:calc(4*var(--u)) 0 0}
+.mic{position:relative;width:78px;height:78px;border-radius:50%;border:0;cursor:pointer;
+  background:linear-gradient(160deg,#F0673D,#D8431C);color:#fff;display:grid;place-items:center;
+  box-shadow:0 16px 30px -14px rgba(216,67,28,.85);transition:transform 160ms var(--ease)}
+.mic:active{transform:scale(.95)}
+.mic svg{width:31px;height:31px;stroke:#fff;stroke-width:2}
+/* the rings are the whole invitation — a still circle does not say "talk to me" */
+.mic::before,.mic::after{content:"";position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid rgba(225,85,46,.5)}
+@media (prefers-reduced-motion:no-preference){
+  .mic::before{animation:ring 2.4s var(--ease) infinite}
+  .mic::after{animation:ring 2.4s var(--ease) infinite .9s}
+  .vhero.vrec .mic::before,.vhero.vrec .mic::after{animation-duration:1.1s}
+}
+@keyframes ring{from{transform:scale(1);opacity:.6}to{transform:scale(1.55);opacity:0}}
+.vhint{margin-top:calc(13*var(--u));font-size:14px;font-weight:700;color:#241C15}
+.vsub{margin-top:3px;font-size:12.5px;color:#A69A8A}
+.vwave{margin-top:calc(11*var(--u));display:flex;align-items:center;justify-content:center;
+  gap:3px;height:34px;width:100%}
+.vwave i{width:3px;border-radius:2px;background:#E1552E;opacity:.28;height:18%;
+  transition:height 180ms var(--ease),opacity 180ms}
+.vhero.vrec .vwave i{opacity:.85}
+.vhero.vdone .vwave i{opacity:.5}
+.vclock{margin-top:7px;font-size:12.5px;font-weight:800;color:#A69A8A;
+  font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.vhero.vrec .vclock{color:#E1552E}
+.vor{margin-top:calc(11*var(--u));background:none;border:0;font:inherit;font-size:13px;
+  font-weight:700;color:#A69A8A;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+
+/* ---------- the colour picker ----------
+   A native <input type=color> opens the operating system's dialog: unbranded, different on every
+   device, and on iOS it covers the screen. So this is ours. It is a bottom sheet rather than a
+   floating dropdown because the stage clips its own overflow — a popover anchored to a swatch near
+   the bottom would be cut off — and because a sheet is where a thumb already is. */
+.swat{gap:9px;margin-top:12px}
+.swat div{position:relative;height:58px;cursor:pointer;
+  transition:transform 160ms var(--ease),box-shadow 160ms var(--ease)}
+.swat div:active{transform:scale(.96)}
+.swat div.sel{border-color:#241C15}
+.swat div::after{content:"";position:absolute;right:6px;bottom:6px;width:15px;height:15px;
+  border-radius:50%;background:rgba(255,255,255,.92);opacity:0;transition:opacity 160ms;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23241C15' stroke-width='3'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+  background-size:9px;background-repeat:no-repeat;background-position:center}
+.swat div:hover::after{opacity:1}
+.hexrow{display:flex;gap:9px;margin-top:7px}
+.hexrow span{flex:1;text-align:center;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+  color:#A69A8A;font-variant-numeric:tabular-nums}
+
+.cpscrim{position:absolute;inset:0;background:rgba(36,28,21,.34);opacity:0;pointer-events:none;
+  transition:opacity 220ms var(--ease);z-index:8;backdrop-filter:blur(1.5px)}
+.cpscrim.on{opacity:1;pointer-events:auto}
+.cpsheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:#FFFDFA;
+  border-radius:24px 24px 0 0;padding:8px 20px calc(20px + env(safe-area-inset-bottom));
+  box-shadow:0 -22px 50px -30px rgba(36,28,21,.7);border-top:1px solid rgba(36,28,21,.07);
+  transform:translateY(105%);transition:transform 300ms var(--ease)}
+.cpsheet.on{transform:translateY(0)}
+.cpgrab{width:38px;height:4px;border-radius:99px;background:rgba(36,28,21,.14);margin:0 auto 12px}
+.cpsheet h4{margin:0 0 2px;font-size:16px;font-weight:800;color:#241C15;letter-spacing:-.015em}
+.cpsheet .shsub{margin:0 0 13px;font-size:12.5px;color:#A69A8A}
+.cpbig{display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.cpbig .cpdot{width:52px;height:52px;border-radius:15px;flex:none;
+  box-shadow:0 8px 18px -10px rgba(36,28,21,.6),inset 0 0 0 1px rgba(36,28,21,.08)}
+.cphex{flex:1;border:1.5px solid rgba(36,28,21,.12);border-radius:13px;padding:11px 13px;
+  background:#fff;font:inherit;font-size:15px;font-weight:800;letter-spacing:.06em;color:#241C15;
+  text-transform:uppercase;box-shadow:inset 0 1px 2px rgba(36,28,21,.045)}
+.cphex:focus{outline:none;border-color:#E1552E;box-shadow:0 0 0 3px rgba(225,85,46,.15)}
+.cplab{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:#A69A8A;margin:11px 0 6px}
+.cpsl{-webkit-appearance:none;appearance:none;width:100%;height:16px;border-radius:99px;
+  border:1px solid rgba(36,28,21,.1);background:#eee}
+.cpsl::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;
+  background:#fff;border:2.5px solid #241C15;cursor:pointer;
+  box-shadow:0 3px 8px -2px rgba(36,28,21,.5)}
+.cpsl::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;
+  border:2.5px solid #241C15;cursor:pointer}
+.cppal{display:grid;grid-template-columns:repeat(9,1fr);gap:7px;margin-top:4px}
+.cppal button{aspect-ratio:1;border-radius:9px;border:2px solid transparent;cursor:pointer;padding:0;
+  box-shadow:inset 0 0 0 1px rgba(36,28,21,.09)}
+.cppal button.on{border-color:#241C15}
+.cpfoot{display:flex;gap:9px;margin-top:15px}
+.cpfoot button{flex:1;border-radius:100px;padding:13px;font:inherit;font-size:14.5px;
+  font-weight:700;cursor:pointer;border:1.5px solid rgba(36,28,21,.13);background:#fff;color:#241C15}
+.cpfoot button.pri{background:#241C15;color:#fff;border-color:#241C15;flex:1.5}
+/* the live proof that the choice did something — the same consequence-card idea as the rest of
+   the flow, except here the consequence is visible in the colour itself */
+.bmock{width:68px;height:68px;border-radius:11px;flex:none;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;padding:7px}
+.bmock .bbar{height:5px;border-radius:3px;width:60%;margin-bottom:4px}
+.bmock .bln{height:4px;border-radius:3px;width:82%;opacity:.5}
 </style></head><body>
 <div class="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
@@ -225,6 +338,8 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
   <div class="stage" id="stage"></div>
   <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
     <button class="skip ghost" id="skip"></button></div>
+  <div class="cpscrim" id="scrim"></div>
+  <div class="cpsheet" id="sheet"></div>
 </div>
 
 <script src="screens-data.js"></script>
@@ -341,7 +456,82 @@ function fixIcons(html) {
     .replace(/<path d="M14\.7 6\.3[^"]*"\/>/g, IC.wrench);
 }
 
+// ---------------------------------------------------------------------------------------------
+// THE TWO SCREENS REZA ASKED FOR. Both keep the shared chrome exactly as it is; only the answer
+// area is rebuilt. Both are written out in full here rather than regex-patched into the markup
+// that lives in screens-data.js — a non-greedy regex silently collapsed a nested card once before
+// and rendered fine while the layout was wrong ([[lesson_regex_sliced_nested_html]]).
+// ---------------------------------------------------------------------------------------------
+const MIC = '<path d="M12 15.5a3.5 3.5 0 003.5-3.5V6a3.5 3.5 0 00-7 0v6a3.5 3.5 0 003.5 3.5z"/>' +
+            '<path d="M5.5 11.5A6.5 6.5 0 0018.5 11.5M12 18.5V22"/>';
+const BARS = 34;
+
+function voiceBody() {
+  const bars = Array.from({length: BARS}, () => '<i></i>').join('');
+  return `<div class="body"><div class="vhero anim" id="vhero" style="--d:40ms">
+      <button class="mic" id="mic" aria-label="Record">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">${MIC}</svg>
+      </button>
+      <div class="vhint" id="vhint">Tap and just talk.</div>
+      <div class="vsub" id="vsub">Twenty seconds is plenty. Say it how you would at a wedding.</div>
+      <div class="vwave" id="vwave">${bars}</div>
+      <div class="vclock" id="vclock">0:00</div>
+      <button class="vor" id="vor">or type it instead</button>
+    </div>
+    <div class="note anim" id="vnote" hidden style="--d:60ms">
+      <div class="noteph" contenteditable="true" spellcheck="false"
+        data-ph="Kedai kopi kecil di Bangsar, kami roast sendiri sejak 1997&hellip;"></div>
+    </div>
+    <div class="conseq anim" style="--d:90ms">
+      <div class="ch"><i></i>Then we write the way you talk</div>
+      <div class="cb"><div class="cimg"><img src="genimg/post-4.png" alt=""></div>
+        <div class="ctx"><span class="q">Kami roast sendiri. Same beans, same roaster, since 1997.</span>
+          <div class="killed" style="color:#A69A8A">Your words and your rhythm, not ours</div></div></div>
+    </div></div>`;
+}
+
+// Nine columns: the brand's own, then warm/earth, then cool, then neutrals. Curated rather than a
+// full spectrum because the job here is "confirm what we pulled off your logo", not "design a
+// brand" — and a wide-open picker is how you get a neon feed.
+const PALETTE = [
+  '#E24A28', '#FF6A45', '#FFC24B', '#E8A33D', '#B4472A', '#7A3B2E', '#2F6B3D', '#1B3A5C', '#3E6E8E',
+  '#8C6A9E', '#C2557A', '#D98BA0', '#F2E4CE', '#C9B79C', '#8A7C6A', '#4A4038', '#241C15', '#F7F3EC',
+];
+
+function colourBody() {
+  const sw = INIT_COLOURS.map((c, n) =>
+    `<div data-i="${n}" style="background:${c}"${n < 3 ? ' class="sel"' : ''}></div>`).join('');
+  const hex = INIT_COLOURS.map(c => `<span>${c.toUpperCase()}</span>`).join('');
+  return `<div class="body">
+      <div class="anim" style="--d:40ms">
+        <div class="swat" id="swat">${sw}</div>
+        <div class="hexrow" id="hexrow">${hex}</div>
+      </div>
+      <div class="fontrow anim" style="--d:70ms">
+        <div class="opt sel"><div class="glyph" style="font-size:16px;font-weight:800">Aa</div>
+          <div class="otxt"><div class="oname">Headings</div><div class="odesc">Bold, tight, confident</div></div>
+          <div class="radio"></div></div>
+        <div class="opt"><div class="glyph" style="font-size:16px;font-weight:500">Aa</div>
+          <div class="otxt"><div class="oname">Body</div><div class="odesc">Plain and readable</div></div>
+          <div class="radio"></div></div>
+      </div>
+      <div class="conseq anim" style="--d:100ms">
+        <div class="ch"><i></i>Everything we make will look like this</div>
+        <div class="cb"><div class="bmock" id="bmock"><div class="bbar"></div><div class="bln"></div></div>
+          <div class="ctx"><span class="q">Merdeka. Kami tutup pukul 2 petang.</span>
+            <div class="killed" style="color:#A69A8A">Your three colours, on every post</div></div></div>
+      </div></div>`;
+}
+
 function question(s) {
+  if (s.t === 'The wedding sentence') {
+    return { pos: s.t, eb: noTotal(s.eb), h: 'How would you describe it<br>to someone at a wedding?',
+      sub: 'One sentence, in your words.', btn: 'Continue', skip: s.skip || '', body: voiceBody() };
+  }
+  if (s.t === 'Colours') {
+    return { pos: s.t, eb: noTotal(s.eb), h: noTotal(s.h), sub: noTotal(s.sub),
+      btn: noTotal(s.btn) || 'Continue', skip: s.skip || '', body: colourBody() };
+  }
   return {
     pos: s.t || '',
     eb:  noTotal(s.eb),
@@ -368,6 +558,176 @@ function create() {
   };
 }
 
+// ---------------------------------------------------------------------------------------------
+// COLOUR: the state, the maths, and the branded sheet
+// ---------------------------------------------------------------------------------------------
+const INIT_COLOURS = ['#E24A28', '#FFC24B', '#1A1520', '#1B3A5C'];
+const COLOURS = INIT_COLOURS.slice();          // survives going back and forward
+const scrim = document.getElementById('scrim'), sheet = document.getElementById('sheet');
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function hex2hsl(h) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(h.trim()); if (!m) return null;
+  const n = parseInt(m[1], 16);
+  let r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let hu = 0; const l = (mx + mn) / 2;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (d) {
+    if (mx === r) hu = ((g - b) / d) % 6; else if (mx === g) hu = (b - r) / d + 2; else hu = (r - g) / d + 4;
+    hu *= 60; if (hu < 0) hu += 360;
+  }
+  return { h: Math.round(hu), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+function hsl2hex(h, s, l) {
+  s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+  const t = h < 60 ? [c,x,0] : h < 120 ? [x,c,0] : h < 180 ? [0,c,x]
+          : h < 240 ? [0,x,c] : h < 300 ? [x,0,c] : [c,0,x];
+  return '#' + t.map(v => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+
+// repaint every place a colour is shown, from the one array. No screen keeps its own copy.
+function paintColours(root) {
+  const sw = root.querySelector('#swat'), hr = root.querySelector('#hexrow');
+  if (sw) [...sw.children].forEach((d, n) => { d.style.background = COLOURS[n]; });
+  if (hr) [...hr.children].forEach((s, n) => { s.textContent = COLOURS[n].toUpperCase(); });
+  const mock = root.querySelector('#bmock');
+  if (mock) {
+    mock.style.background = COLOURS[0];
+    mock.querySelector('.bbar').style.background = COLOURS[1];
+    mock.querySelector('.bln').style.background = COLOURS[2];
+  }
+}
+
+let sheetIdx = -1, sheetPrev = null;
+function closeSheet(restore) {
+  if (restore && sheetIdx >= 0 && sheetPrev) COLOURS[sheetIdx] = sheetPrev;
+  sheetIdx = -1;
+  sheet.classList.remove('on'); scrim.classList.remove('on');
+  const scr = stage.querySelector('.scr'); if (scr) paintColours(scr);
+}
+scrim.addEventListener('click', () => closeSheet(true));
+
+function openSheet(idx) {
+  sheetIdx = idx; sheetPrev = COLOURS[idx];
+  const c = hex2hsl(COLOURS[idx]) || { h: 0, s: 0, l: 50 };
+  sheet.innerHTML = `<div class="cpgrab"></div>
+    <h4>${['Your main colour','Your second colour','Your text colour','One more'][idx] || 'Colour'}</h4>
+    <p class="shsub">We pulled this from your logo. Change it to whatever is actually yours.</p>
+    <div class="cpbig"><div class="cpdot" id="shdot"></div>
+      <input class="cphex" id="shhex" maxlength="7" spellcheck="false" inputmode="text"></div>
+    <div class="cplab">Hue</div><input class="cpsl" id="shH" type="range" min="0" max="359">
+    <div class="cplab">Strength</div><input class="cpsl" id="shS" type="range" min="0" max="100">
+    <div class="cplab">Light or dark</div><input class="cpsl" id="shL" type="range" min="6" max="94">
+    <div class="cplab">Or pick one</div>
+    <div class="cppal" id="shPal">${PALETTE.map(p =>
+      `<button data-c="${p}" style="background:${p}" aria-label="${p}"></button>`).join('')}</div>
+    <div class="cpfoot"><button id="shCancel">Cancel</button>
+      <button class="pri" id="shDone">Use this colour</button></div>`;
+
+  const dot = sheet.querySelector('#shdot'), hexIn = sheet.querySelector('#shhex');
+  const H = sheet.querySelector('#shH'), S = sheet.querySelector('#shS'), L = sheet.querySelector('#shL');
+  let st = { ...c, exact: COLOURS[idx] };
+
+  // ⛔ Picking #8C6A9E off the palette produced #8C6B9E. Hex → HSL rounds to whole degrees and
+  // percents, and converting back cannot recover the original byte. Nobody would spot it, and that
+  // is the problem: a brand colour typed from a style guide must come back EXACTLY as typed.
+  // ⇒ An exact value is carried through untouched; only moving a slider recomputes from HSL.
+  const draw = (typing) => {
+    const hexv = st.exact || hsl2hex(st.h, st.s, st.l);
+    COLOURS[sheetIdx] = hexv;
+    dot.style.background = hexv;
+    if (!typing) hexIn.value = hexv.toUpperCase();
+    H.value = st.h; S.value = st.s; L.value = st.l;
+    // the sliders show what they will DO, not a generic grey track — that is most of "nice"
+    H.style.background = 'linear-gradient(90deg,' + [0,60,120,180,240,300,359]
+      .map(h => hsl2hex(h, Math.max(st.s, 55), 50)).join(',') + ')';
+    S.style.background = `linear-gradient(90deg,${hsl2hex(st.h,0,st.l)},${hsl2hex(st.h,100,st.l)})`;
+    L.style.background = `linear-gradient(90deg,#000,${hsl2hex(st.h,st.s,50)},#fff)`;
+    sheet.querySelectorAll('#shPal button').forEach(b =>
+      b.classList.toggle('on', b.dataset.c.toLowerCase() === hexv.toLowerCase()));
+    const scr = stage.querySelector('.scr'); if (scr) paintColours(scr);   // live, behind the sheet
+  };
+  draw();
+
+  H.addEventListener('input', () => { st.h = +H.value; st.exact = null; draw(); });
+  S.addEventListener('input', () => { st.s = +S.value; st.exact = null; draw(); });
+  L.addEventListener('input', () => { st.l = +L.value; st.exact = null; draw(); });
+  hexIn.addEventListener('input', () => {
+    let v = hexIn.value.trim(); if (v[0] !== '#') v = '#' + v;
+    const p = hex2hsl(v); if (p) { st = { ...p, exact: v.toLowerCase() }; draw(true); }
+  });
+  sheet.querySelectorAll('#shPal button').forEach(b => b.addEventListener('click', () => {
+    const p = hex2hsl(b.dataset.c); if (p) { st = { ...p, exact: b.dataset.c }; draw(); }
+  }));
+  sheet.querySelector('#shCancel').addEventListener('click', () => closeSheet(true));
+  sheet.querySelector('#shDone').addEventListener('click', () => closeSheet(false));
+
+  scrim.classList.add('on');
+  requestAnimationFrame(() => sheet.classList.add('on'));
+}
+
+// ---------------------------------------------------------------------------------------------
+// VOICE: a prototype recorder. It does not capture audio — it demonstrates the interaction.
+// ⛔ Say that out loud rather than letting a demo imply a capability we have not built.
+// ---------------------------------------------------------------------------------------------
+let vTimer = null;
+function wireVoice(el, st) {
+  const hero = el.querySelector('#vhero'); if (!hero) return;
+  const mic = el.querySelector('#mic'), wave = el.querySelector('#vwave');
+  const clock = el.querySelector('#vclock'), hint = el.querySelector('#vhint');
+  const sub = el.querySelector('#vsub'), or = el.querySelector('#vor'), note = el.querySelector('#vnote');
+  const bars = [...wave.children];
+  const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const idle = () => bars.forEach((b, n) => {
+    b.style.height = (14 + 12 * Math.abs(Math.sin(n * 0.9))) + '%';
+  });
+  let secs = st.voice || 0, running = false;
+
+  const settled = () => {
+    hero.classList.remove('vrec'); hero.classList.add('vdone');
+    hint.textContent = `Got it — ${fmt(secs)} recorded.`;
+    sub.textContent = 'Tap the button to record it again.';
+    clock.textContent = fmt(secs);
+  };
+  const stop = () => {
+    running = false; clearInterval(vTimer); vTimer = null;
+    st.voice = secs; secs ? settled() : reset();
+  };
+  const reset = () => {
+    hero.classList.remove('vrec', 'vdone'); idle();
+    hint.textContent = 'Tap and just talk.';
+    sub.textContent = 'Twenty seconds is plenty. Say it how you would at a wedding.';
+    clock.textContent = '0:00';
+  };
+
+  idle();
+  if (st.voice) settled();
+
+  mic.addEventListener('click', () => {
+    if (running) return stop();
+    secs = 0; running = true;
+    hero.classList.add('vrec'); hero.classList.remove('vdone');
+    hint.textContent = 'Listening — tap to stop.';
+    sub.textContent = 'Say it once, the way you actually say it.';
+    vTimer = setInterval(() => {
+      secs++; clock.textContent = fmt(secs);
+      // a waveform that does not move during recording reads as broken
+      bars.forEach(b => { b.style.height = (18 + Math.random() * 76) + '%'; });
+      if (secs >= 30) stop();
+    }, 260);
+  });
+
+  or.addEventListener('click', () => {
+    const typing = !note.hidden;
+    note.hidden = typing;
+    or.textContent = typing ? 'or type it instead' : 'or record it instead';
+    if (!typing) note.querySelector('[contenteditable]').focus();
+  });
+  if (st.e0) { note.hidden = false; or.textContent = 'or record it instead'; }
+}
+
 // ⛔ These listeners used to be registered INSIDE render(), once per screen, and never removed —
 // after twenty steps there were twenty of them, each holding a detached element alive. One
 // listener that calls whatever the current screen's refit is.
@@ -383,6 +743,10 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', () =
 });
 
 function render(rev) {
+  // ⛔ A setInterval left running on a screen you have left keeps writing into detached nodes and
+  // keeps counting. Kill it before the screen goes, not in a cleanup that may never run.
+  if (vTimer) { clearInterval(vTimer); vTimer = null; }
+  if (sheetIdx >= 0) closeSheet(false);
   const old = stage.querySelector('.scr');
   if (old) {
     old.classList.remove('in'); old.classList.add('out');
@@ -486,6 +850,11 @@ function render(rev) {
   skipBtn.onclick = () => { if (i < LAST) { i++; render(false); } };
   backBtn.onclick = () => { if (i > 0) { i--; render(true); } };
   bindState(el, i);
+  // the two rebuilt screens. paintColours runs on EVERY render, not just the colour screen, so a
+  // colour changed and then revisited shows the change rather than the value baked into the markup.
+  paintColours(el);
+  el.querySelectorAll('#swat > div').forEach((d, n) => d.addEventListener('click', () => openSheet(n)));
+  wireVoice(el, stateFor(i));
   el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
     el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
     x.classList.add('on');
