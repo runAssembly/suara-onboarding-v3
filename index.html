@@ -27,9 +27,11 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 }
 .stage{position:relative;flex:1;overflow:hidden}
 .scr{position:absolute;inset:0;overflow:hidden}
-.fit{position:absolute;inset:0;display:flex;flex-direction:column;
-  transform-origin:top center;will-change:transform}
-.scr .body{min-height:0}
+.fit{position:absolute;top:0;left:0;right:0;display:flex;flex-direction:column;
+  min-height:100%;transform-origin:top center;will-change:transform}
+/* natural height — never squashed, so nothing can spill under the footer */
+.scr .body{flex:1 0 auto;min-height:0}
+.scr .foot{margin-top:auto}
 
 /* container fades, children translate — split across DOM levels so it reads as one soft object */
 /* held invisible until it has been measured and scaled — nothing animates before it fits */
@@ -57,7 +59,9 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
   transition:width var(--t-prog) var(--ease)}
 .navrow{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex:none}
 .back{width:34px;height:34px;border-radius:50%;border:1px solid rgba(36,28,21,.14);background:#fff;
-  display:grid;place-items:center;cursor:pointer;transition:opacity 160ms,transform 160ms}
+  display:grid;place-items:center;cursor:pointer;color:#241C15;-webkit-appearance:none;appearance:none;
+  padding:0;transition:opacity 160ms,transform 160ms}
+.back svg{width:17px;height:17px;stroke:#241C15}
 .back[hidden]{opacity:0;pointer-events:none}
 .back:active{transform:scale(.94)}
 .pos{margin-left:auto;font-size:12.5px;color:#A69A8A;font-weight:600;letter-spacing:.02em}
@@ -65,7 +69,7 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .body{padding:calc(6*var(--u)) calc(24*var(--u)) calc(14*var(--u));flex:1;min-height:0}
 .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
   margin-bottom:10px}
-h1{font-size:clamp(20px, calc(27*var(--u)), 29px);line-height:1.16;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
+h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
 .sub{font-size:clamp(13px, calc(15*var(--u)), 16px);line-height:1.5;color:#7C7062;
   margin-bottom:calc(14*var(--u))}
 .foot{padding:0 calc(24*var(--u)) calc(20*var(--u));flex:none}
@@ -92,7 +96,7 @@ h1{font-size:clamp(20px, calc(27*var(--u)), 29px);line-height:1.16;letter-spacin
 .pill.ok{color:#2F6B3D}
 .pill svg{width:14px;height:14px;flex:none;opacity:.75}
 .pill.ok svg{opacity:1}
-.stack{position:relative;height:clamp(150px, calc(212*var(--u)), 230px);display:grid;place-items:center}
+.stack{position:relative;height:clamp(118px, calc(212*var(--u)), 230px);display:grid;place-items:center}
 .pin{position:absolute;z-index:3}
 /* Bob's positions. They overlap the CARDS on purpose — that is the depth — but the 2x rule from
    better-layout means they must never overlap each OTHER, which is where his collided. */
@@ -109,7 +113,7 @@ h1{font-size:clamp(20px, calc(27*var(--u)), 29px);line-height:1.16;letter-spacin
 /* FIX 2: the dead gap between the pills and the headline is closed — the copy block starts
    directly under the stack instead of 200px below it. */
 .welcopy{margin-top:28px;margin-bottom:auto}
-.welcopy h1{font-size:clamp(30px, calc(41*var(--u)), 46px);line-height:1.02;
+.welcopy h1{font-size:clamp(25px, calc(41*var(--u)), 46px);line-height:1.02;
   letter-spacing:-.035em;margin-bottom:calc(9*var(--u))}
 /* FIX 3: the count is stated ONCE, in the pill. The sentence says what it is, not how many. */
 .welcopy p{font-size:15.5px;line-height:1.5;color:#7C7062;margin:0}
@@ -120,7 +124,7 @@ h1{font-size:clamp(20px, calc(27*var(--u)), 29px);line-height:1.16;letter-spacin
 .lang button.on{background:#E1552E;border-color:#E1552E;color:#fff}
 
 /* ---------- the new final screen ---------- */
-[contenteditable]{outline:none}
+[contenteditable],input,textarea,select{outline:none;font-size:16px}
 [contenteditable]:empty::before{content:attr(data-ph);color:#B6AC9E}
 [contenteditable]:focus{box-shadow:0 0 0 2px rgba(225,85,46,.22);border-radius:6px}
 .cats{display:flex;flex-direction:column;gap:calc(7*var(--u));margin-top:calc(3*var(--u))}
@@ -159,7 +163,8 @@ const IC = {
   cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 2.6v4.2M16 2.6v4.2M3.5 10h17"/>',
   check:'<path d="M4.5 12.5l5 5 10-11"/>',
   stetho:'<path d="M6 3v5a5 5 0 0010 0V3"/><path d="M11 13v2a5 5 0 0010 0v-1"/><circle cx="21" cy="12" r="1.6"/>',
-  wrench:'<path d="M15.5 3.5a5.5 5.5 0 00-6.9 6.9L3 16v5h5l5.6-5.6a5.5 5.5 0 006.9-6.9l-3.3 3.3-2.8-2.8z"/>'
+  wrench:'<path d="M15.5 3.5a5.5 5.5 0 00-6.9 6.9L3 16v5h5l5.6-5.6a5.5 5.5 0 006.9-6.9l-3.3 3.3-2.8-2.8z"/>',
+  arrow:'<path d="M15 19l-7-7 7-7"/>'
 };
 const svg = (k, col) => `<svg viewBox="0 0 24 24" fill="none" stroke="${col||'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -257,7 +262,7 @@ function fixIcons(html) {
 }
 
 function question(s) {
-  return `<div class="navrow anim"><button class="back" id="back">&larr;</button>
+  return `<div class="navrow anim"><button class="back" id="back" aria-label="Back">${svg('arrow')}</button>
       <span class="pos">${s.t || ''}</span></div>
     <div class="body">
       <div class="eyebrow anim" style="--d:30ms">${noTotal(s.eb)}</div>
@@ -272,7 +277,7 @@ function question(s) {
 }
 
 function create() {
-  return `<div class="navrow anim"><button class="back" id="back">&larr;</button></div>
+  return `<div class="navrow anim"><button class="back" id="back" aria-label="Back">${svg('arrow')}</button></div>
     <div class="body">
       <div class="eyebrow anim" style="--d:30ms">Last one</div>
       <h1 class="anim" style="--d:60ms">Now let's make<br>your first week.</h1>
@@ -314,21 +319,44 @@ function render(back) {
   // images afterwards, so `need` was computed against a shorter box and those two screens kept
   // overflowing. Re-fit whenever an image lands, whenever the box changes, and on resize.
   function refit() {
-    const avail = el.clientHeight;
+    // ⛔ On iOS Safari 100dvh includes the strip under the toolbar, so el.clientHeight is LARGER
+    // than what you can actually see — the fit concluded there was room and the Continue button
+    // ended up on top of the content on Reza's phone while every headless size passed. Measure
+    // against visualViewport, which is the genuinely visible area.
+    const vv = window.visualViewport;
+    const avail = Math.min(el.clientHeight, vv ? vv.height : el.clientHeight);
     // ⛔ The width compensation was self-defeating and caused an oscillation: widening the box to
     // 100/k% re-wrapped the text TALLER, so the next measure produced a different need and the
     // scale never converged (measured: 755 unscaled vs 859 scaled, settling at the wrong k).
     // Scale only. A narrower column at small sizes is a cosmetic cost; a scrollbar is not allowed.
     fit.style.transform = 'none';
-    const need = fit.scrollHeight;
-    const k = need > avail + 1 ? Math.max(0.62, avail / need) : 1;
+    const bodyEl = fit.querySelector('.body') || fit.querySelector('.wel');
+    const footEl = fit.querySelector('.foot');
+    const navEl  = fit.querySelector('.navrow');
+    // ⛔ scrollHeight lied again. The body is a squashed flex child with visible overflow, so it
+    // reported 363px while its children genuinely occupied more — need came out UNDER the
+    // available height, no scale was applied, and the Continue button sat on top of the content.
+    // Measure the real ink: the union of the children's boxes.
+    // with a natural-height column, offsetHeight is finally the truth
+    const need = fit.offsetHeight;
+    // never clip: a smaller screen is recoverable, a hidden Continue button is not
+    const k = need > avail + 1 ? Math.max(0.45, avail / need) : 1;
     fit.style.transform = k < 1 ? `scale(${k})` : 'none';
-    if (need > avail + 1 && avail / need < 0.62) console.warn('screen', i, 'overflows even at the floor');
+    if (need > avail + 1 && avail / need < 0.45) console.warn('screen', i, 'overflows even at the floor');
   }
   // measure, scale, and only then reveal — this is what removed the snap
-  requestAnimationFrame(() => {
+  // fit twice while still invisible (fonts and images can settle between the two), then reveal.
+  // Nothing re-scales after this point, so there is no jump to see.
+  const reveal = () => { el.classList.remove('pre'); el.classList.add('in'); };
+  const imgs = [...fit.querySelectorAll('img')].filter(im => !im.complete);
+  Promise.all(imgs.map(im => new Promise(r => {
+    im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true });
+  }))).then(() => requestAnimationFrame(() => {
     refit();
-    requestAnimationFrame(() => { el.classList.remove('pre'); el.classList.add('in'); });
+    requestAnimationFrame(() => { refit(); requestAnimationFrame(reveal); });
+  }));
+  if (!imgs.length) requestAnimationFrame(() => {
+    refit(); requestAnimationFrame(() => { refit(); requestAnimationFrame(reveal); });
   });
   fit.querySelectorAll('img').forEach(img => {
     if (!img.complete) img.addEventListener('load', refit, { once: true });
@@ -339,10 +367,8 @@ function render(back) {
   // against 755px while the real content settled at 859px, which is exactly the residual
   // overflow the test kept reporting. Observe the content, and re-fit on a couple of delays for
   // late layout (web fonts, cached images that report complete before reflow).
-  const inner = fit.firstElementChild;
-  if (inner) new ResizeObserver(refit).observe(inner);
-  setTimeout(refit, 120); setTimeout(refit, 450);
-  addEventListener('resize', refit);
+  addEventListener('resize', refit);   // real viewport changes only — never while just sitting there
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', refit);
   // no total is shown anywhere — position only. The flow is 29 screens and used to claim 17.
   fill.style.width = Math.round((i / LAST) * 100) + '%';
 
