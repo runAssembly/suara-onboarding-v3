@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP generated-card-art-r6 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP selection-glyph-state-r7 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -207,6 +207,14 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
    a 356px answer area before the question was even counted. Tightened to ~52px, which is still
    well above a 44px touch target and gets most screens back to fitting outright. Overridden here
    rather than in flow-shared.css because the other prototypes still render against that file. */
+/* ⛔ THE GLYPH COLOUR WAS BAKED INTO THE MARKUP. Each option in screens-data.js hardcodes its own
+   `stroke="…"`, and whichever option the original static mockup had selected was written with the
+   coral stroke. Now that selection is real, the coral stayed stuck on "Bookings" while the tick
+   moved to "Enquiries" — two options looking half-selected at once. A presentation attribute is a
+   value frozen at authoring time; the STATE has to come from CSS or it cannot follow the user.
+   (CSS beats a presentation attribute, so no !important is needed here.) */
+.opt .glyph svg{stroke:#3B3128}
+.opt.sel .glyph svg{stroke:#E1552E}
 .opts{margin-top:10px;gap:7px}
 .opt{padding:10px 13px;gap:11px}
 .opt.sel{padding:9px 12px}
