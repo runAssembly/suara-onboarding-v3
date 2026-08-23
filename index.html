@@ -9,13 +9,27 @@
   --ease:cubic-bezier(.32,.72,0,1);
 }
 *{box-sizing:border-box}
-body{margin:0;background:#EFE7DA;font-family:PJS,ui-sans-serif,system-ui,sans-serif;
-  min-height:100vh;display:grid;place-items:center;padding:26px 16px 40px}
-.shell{width:390px;max-width:100%;height:800px;max-height:88vh;background:#FBF4EA;border-radius:38px;
-  box-shadow:0 40px 90px -50px rgba(60,40,25,.6),0 0 0 9px #1B1611;overflow:hidden;position:relative;
+/* Reza: "this is going to be used through a browser" + "everything always stays in one screen".
+   So: no fake phone chrome, no page scroll ever, and the whole thing sized off dvh so mobile
+   browser chrome appearing/disappearing cannot introduce a scrollbar. Everything below scales
+   with --u, one unit derived from the actual viewport, so a 640px-tall laptop window and a
+   900px-tall one both fit without a scrollbar rather than only the tall one fitting. */
+html,body{height:100%;overflow:hidden}
+body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-serif;
+  display:flex;justify-content:center;
+  --u:clamp(.72px, .1vh + .05vw, 1.06px);}
+.shell{width:min(460px,100%);height:100dvh;background:#FBF4EA;overflow:hidden;position:relative;
   display:flex;flex-direction:column}
+@media (min-width:900px){
+  body{background:#EFE7DA;align-items:center}
+  .shell{height:min(920px,96dvh);border-radius:30px;
+    box-shadow:0 40px 90px -50px rgba(60,40,25,.55);border:1px solid rgba(36,28,21,.08)}
+}
 .stage{position:relative;flex:1;overflow:hidden}
-.scr{position:absolute;inset:0;display:flex;flex-direction:column;padding:0;overflow-y:auto}
+.scr{position:absolute;inset:0;overflow:hidden}
+.fit{position:absolute;inset:0;display:flex;flex-direction:column;
+  transform-origin:top center;will-change:transform}
+.scr .body{min-height:0}
 
 /* container fades, children translate — split across DOM levels so it reads as one soft object */
 @media (prefers-reduced-motion:no-preference){
@@ -40,14 +54,16 @@ body{margin:0;background:#EFE7DA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .back:active{transform:scale(.94)}
 .pos{margin-left:auto;font-size:12.5px;color:#A69A8A;font-weight:600;letter-spacing:.02em}
 
-.body{padding:8px 26px 20px;flex:1}
+.body{padding:calc(6*var(--u)) calc(24*var(--u)) calc(14*var(--u));flex:1;min-height:0}
 .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
   margin-bottom:10px}
-h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
-.sub{font-size:15px;line-height:1.55;color:#7C7062;margin-bottom:18px}
-.foot{padding:0 26px 26px;flex:none}
+h1{font-size:clamp(20px, calc(27*var(--u)), 29px);line-height:1.16;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
+.sub{font-size:clamp(13px, calc(15*var(--u)), 16px);line-height:1.5;color:#7C7062;
+  margin-bottom:calc(14*var(--u))}
+.foot{padding:0 calc(24*var(--u)) calc(20*var(--u));flex:none}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#241C15;color:#fff;
-  border:0;width:100%;padding:16px;border-radius:100px;font:inherit;font-size:16px;font-weight:700;
+  border:0;width:100%;padding:calc(15*var(--u));border-radius:100px;font:inherit;
+  font-size:clamp(14px, calc(16*var(--u)), 17px);font-weight:700;
   cursor:pointer;transition:transform 140ms var(--ease),filter 140ms}
 .btn:active{transform:scale(.985)}
 .btn.accent{background:#E1552E}
@@ -65,8 +81,10 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 .pill{background:#fff;border:1px solid rgba(36,28,21,.08);border-radius:100px;padding:7px 14px;
   font-size:12.5px;font-weight:700;color:#241C15;box-shadow:0 6px 18px -12px rgba(60,40,25,.5);
   display:flex;align-items:center;gap:6px;white-space:nowrap}
-.pill.ok{color:#2F6B3D} .pill.ok i{width:7px;height:7px;border-radius:50%;background:#2F6B3D}
-.stack{position:relative;height:212px;display:grid;place-items:center}
+.pill.ok{color:#2F6B3D}
+.pill svg{width:14px;height:14px;flex:none;opacity:.75}
+.pill.ok svg{opacity:1}
+.stack{position:relative;height:clamp(150px, calc(212*var(--u)), 230px);display:grid;place-items:center}
 .pin{position:absolute;z-index:3}
 /* Bob's positions. They overlap the CARDS on purpose — that is the depth — but the 2x rule from
    better-layout means they must never overlap each OTHER, which is where his collided. */
@@ -74,15 +92,17 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 .pin.b{bottom:24px;left:-4px}
 .pin.c{bottom:52px;right:-4px}
 .pin.d{bottom:-14px;left:50%;transform:translateX(-30%)}
-.stack img{position:absolute;width:126px;height:158px;object-fit:cover;border-radius:14px;
+.stack img{position:absolute;width:calc(126*var(--u));height:calc(158*var(--u));object-fit:cover;
+  border-radius:14px;
   border:4px solid #fff;box-shadow:0 18px 40px -22px rgba(60,40,25,.55)}
 .stack img:nth-child(1){transform:rotate(-9deg) translateX(-88px)}
 .stack img:nth-child(2){transform:rotate(4deg) translateX(88px)}
-.stack img:nth-child(3){width:150px;height:186px;z-index:2}
+.stack img:nth-child(3){width:calc(150*var(--u));height:calc(186*var(--u));z-index:2}
 /* FIX 2: the dead gap between the pills and the headline is closed — the copy block starts
    directly under the stack instead of 200px below it. */
 .welcopy{margin-top:28px;margin-bottom:auto}
-.welcopy h1{font-size:40px;line-height:1.02;letter-spacing:-.035em;margin-bottom:10px}
+.welcopy h1{font-size:clamp(30px, calc(41*var(--u)), 46px);line-height:1.02;
+  letter-spacing:-.035em;margin-bottom:calc(9*var(--u))}
 /* FIX 3: the count is stated ONCE, in the pill. The sentence says what it is, not how many. */
 .welcopy p{font-size:15.5px;line-height:1.5;color:#7C7062;margin:0}
 .lang{display:flex;gap:10px;margin:18px 0 0}
@@ -92,10 +112,13 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 .lang button.on{background:#E1552E;border-color:#E1552E;color:#fff}
 
 /* ---------- the new final screen ---------- */
-.cats{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+[contenteditable]{outline:none}
+[contenteditable]:empty::before{content:attr(data-ph);color:#B6AC9E}
+[contenteditable]:focus{box-shadow:0 0 0 2px rgba(225,85,46,.22);border-radius:6px}
+.cats{display:flex;flex-direction:column;gap:calc(7*var(--u));margin-top:calc(3*var(--u))}
 .cat{display:grid;grid-template-columns:22px 1fr;grid-template-rows:auto auto;gap:2px 12px;
   text-align:left;background:#fff;border:1px solid rgba(36,28,21,.1);border-radius:15px;
-  padding:14px 16px;font:inherit;cursor:pointer;
+  padding:calc(11*var(--u)) calc(14*var(--u));font:inherit;cursor:pointer;
   transition:border-color 160ms var(--ease),background 160ms var(--ease)}
 /* flow-shared.css styles a .tick of its own (green, filled) and it was bleeding through, so
    unticked boxes rendered as solid green — reading as "already on". Reset explicitly. */
@@ -121,9 +144,54 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 <script src="screens-data.js"></script>
 <script>
 const CATS_HTML = `<button class="cat" data-cat="Promotional"><span class="tick" aria-hidden="true"></span><span class="cn">Promotional</span><span class="cd">Offers, what's new, book or buy now</span></button><button class="cat on" data-cat="Showcase"><span class="tick" aria-hidden="true"></span><span class="cn">Showcase</span><span class="cd">Your products, dishes or services</span></button><button class="cat on" data-cat="Brand &amp; story"><span class="tick" aria-hidden="true"></span><span class="cn">Brand &amp; story</span><span class="cd">Your vibe, values, who you are</span></button><button class="cat" data-cat="Educational"><span class="tick" aria-hidden="true"></span><span class="cn">Educational</span><span class="cd">Tips, how it works, know-how</span></button><button class="cat on" data-cat="Social proof"><span class="tick" aria-hidden="true"></span><span class="cn">Social proof</span><span class="cd">Reviews, results, what people say</span></button><button class="cat" data-cat="Behind the scenes"><span class="tick" aria-hidden="true"></span><span class="cn">Behind the scenes</span><span class="cd">The people and the making</span></button><button class="cat" data-cat="Timely"><span class="tick" aria-hidden="true"></span><span class="cn">Timely</span><span class="cd">Seasonal, local, events</span></button>`;
+
+const IC = {
+  grid:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/>',
+  lock:'<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 2.6v4.2M16 2.6v4.2M3.5 10h17"/>',
+  check:'<path d="M4.5 12.5l5 5 10-11"/>',
+  stetho:'<path d="M6 3v5a5 5 0 0010 0V3"/><path d="M11 13v2a5 5 0 0010 0v-1"/><circle cx="21" cy="12" r="1.6"/>',
+  wrench:'<path d="M15.5 3.5a5.5 5.5 0 00-6.9 6.9L3 16v5h5l5.6-5.6a5.5 5.5 0 006.9-6.9l-3.3 3.3-2.8-2.8z"/>'
+};
+const svg = (k, col) => `<svg viewBox="0 0 24 24" fill="none" stroke="${col||'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stage = document.getElementById('stage'), fill = document.getElementById('fill');
-let i = 0, dir = 1;
+let i = 0;
+const answers = {};   // screen index -> {text, picked:Set}
+
+function stateFor(k) {
+  if (!answers[k]) answers[k] = { text: '', picked: new Set() };
+  return answers[k];
+}
+
+// Restore what they already said, and record anything they change. Runs on every render, so
+// going back shows their own answer rather than an empty field.
+function bindState(el, k) {
+  const st = stateFor(k);
+  if (!st.seeded) {
+    st.seeded = true;
+    el.querySelectorAll('.tile').forEach((t, n) => { if (t.classList.contains('sel')) st.picked.add(n); });
+  }
+  el.querySelectorAll('.tile').forEach((t, n) => t.classList.toggle('sel', st.picked.has(n)));
+  el.querySelectorAll('[contenteditable]').forEach((f, n) => {
+    const key = 'e' + n;
+    if (st[key]) f.textContent = st[key];
+    f.addEventListener('input', () => { st[key] = f.textContent.trim(); });
+  });
+  // tiles, chips and category cards all behave the same: tap to choose, choice persists
+  el.querySelectorAll('.tile, .chip, .cat, .opt').forEach((c, n) => {
+    const single = c.classList.contains('tile');
+    if (st.picked.has(n)) c.classList.add(single ? 'sel' : 'on');
+    c.addEventListener('click', () => {
+      if (single) {
+        el.querySelectorAll('.tile').forEach((o, m) => { o.classList.remove('sel'); st.picked.delete(m); });
+        c.classList.add('sel'); st.picked.add(n);
+      } else {
+        c.classList.toggle('on'); st.picked.has(n) ? st.picked.delete(n) : st.picked.add(n);
+      }
+    });
+  });
+}
 
 // Screen 0 is the welcome; 1..N-2 are the real questions from screens-data.js; the last is the
 // new "make your content" step. S already excludes nothing — its own welcome entry is skipped
@@ -138,10 +206,10 @@ function welcome() {
       <div class="stack">
         <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
       </div>
-      <span class="pill pin a">12 posts &middot; 4 stories</span>
-      <span class="pill pin b">Brand locked</span>
-      <span class="pill pin c">Tue &middot; 8:00am</span>
-      <span class="pill pin d ok"><i></i>Approved</span>
+      <span class="pill pin a">${svg('grid')}12 posts &middot; 4 stories</span>
+      <span class="pill pin b">${svg('lock')}Brand locked</span>
+      <span class="pill pin c">${svg('cal')}Tue &middot; 8:00am</span>
+      <span class="pill pin d ok">${svg('check','#2F6B3D')}Approved</span>
     </div>
     <div class="welcopy anim" style="--d:120ms">
       <h1>Your week of<br>posts, done.</h1>
@@ -162,6 +230,22 @@ function noTotal(html) {
     .replace(/step\s*\d{1,2}\s*of\s*\d{1,2}/gi, '')
     .replace(/tujuh belas soalan/gi, 'Beberapa soalan')
     .replace(/about\s*3\s*minutes?/gi, '');
+}
+
+// Two of the category glyphs did not read: a heart for "clinic or aesthetics" and an ambiguous
+// wedge for "trades". Swapped for a stethoscope and a wrench, same stroke weight as the rest.
+function makeTypeable(html) {
+  return (html || '')
+    .replace(/<span class="val">([^<]*)<\/span>/g,
+      '<span class="val" contenteditable="true" spellcheck="false" data-ph="$1"></span>')
+    .replace(/<div class="noteph">([^<]*)<\/div>/g,
+      '<div class="noteph" contenteditable="true" spellcheck="false" data-ph="$1"></div>');
+}
+
+function fixIcons(html) {
+  return (html || '')
+    .replace(/<path d="M20\.8 [^"]*"\/>|<path d="M12 21[^"]*"\/>/g, IC.stetho)
+    .replace(/<path d="M14\.7 6\.3[^"]*"\/>/g, IC.wrench);
 }
 
 function question(s) {
@@ -206,8 +290,47 @@ function render(back) {
   }
   const el = document.createElement('div');
   el.className = 'scr in' + (back ? ' back' : '');
-  el.innerHTML = i === 0 ? welcome() : (i === LAST ? create() : question(Q[i - 1]));
+  const fit = document.createElement('div');
+  fit.className = 'fit';
+  fit.innerHTML = i === 0 ? welcome() : (i === LAST ? create() : makeTypeable(fixIcons(question(Q[i - 1]))));
+  el.appendChild(fit);
+  if (i === LAST && !answers[LAST]) {
+    const st = stateFor(LAST);
+    el.querySelectorAll('.cat').forEach((c, n) => { if (c.classList.contains('on')) st.picked.add(n); });
+  }
   stage.appendChild(el);
+
+  // measure, then scale only if it genuinely does not fit. Width is compensated so a scaled
+  // screen still fills the shell rather than leaving rails down each side.
+  // ⛔ Measuring once in rAF was too early: the photo grid and the first-week grid load their
+  // images afterwards, so `need` was computed against a shorter box and those two screens kept
+  // overflowing. Re-fit whenever an image lands, whenever the box changes, and on resize.
+  function refit() {
+    const avail = el.clientHeight;
+    // ⛔ The width compensation was self-defeating and caused an oscillation: widening the box to
+    // 100/k% re-wrapped the text TALLER, so the next measure produced a different need and the
+    // scale never converged (measured: 755 unscaled vs 859 scaled, settling at the wrong k).
+    // Scale only. A narrower column at small sizes is a cosmetic cost; a scrollbar is not allowed.
+    fit.style.transform = 'none';
+    const need = fit.scrollHeight;
+    const k = need > avail + 1 ? Math.max(0.62, avail / need) : 1;
+    fit.style.transform = k < 1 ? `scale(${k})` : 'none';
+    if (need > avail + 1 && avail / need < 0.62) console.warn('screen', i, 'overflows even at the floor');
+  }
+  requestAnimationFrame(refit);
+  fit.querySelectorAll('img').forEach(img => {
+    if (!img.complete) img.addEventListener('load', refit, { once: true });
+    img.addEventListener('error', refit, { once: true });
+  });
+  // ⛔ ResizeObserver on `fit` never fires: `.fit` is inset:0, so its own box is pinned to the
+  // container and does not change when the CONTENT grows. Measured it — scale was computed
+  // against 755px while the real content settled at 859px, which is exactly the residual
+  // overflow the test kept reporting. Observe the content, and re-fit on a couple of delays for
+  // late layout (web fonts, cached images that report complete before reflow).
+  const inner = fit.firstElementChild;
+  if (inner) new ResizeObserver(refit).observe(inner);
+  setTimeout(refit, 120); setTimeout(refit, 450);
+  addEventListener('resize', refit);
   // no total is shown anywhere — position only. The flow is 29 screens and used to claim 17.
   fill.style.width = Math.round((i / LAST) * 100) + '%';
 
@@ -216,8 +339,7 @@ function render(back) {
   const b = el.querySelector('#back');
   if (b) { if (i === 0) b.hidden = true;
     b.addEventListener('click', () => { if (i > 0) { i--; render(true); } }); }
-  el.querySelectorAll('.cat').forEach(c =>
-    c.addEventListener('click', () => c.classList.toggle('on')));
+  bindState(el, i);
   el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
     el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
     x.classList.add('on');
