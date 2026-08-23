@@ -37,6 +37,19 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .shell.boot{visibility:hidden}
 .shell{transition:opacity 260ms var(--ease)}
 .shell.boot{opacity:0}
+/* ⛔ ...and hiding it left a BLANK CREAM PAGE for 3.4s on a throttled connection. Measured, not
+   assumed. Trading a half-built UI for a blank page is not a fix, it is the other failure.
+   So there is a real loading state: the mark, breathing. It is pure CSS in the document, so it
+   paints on the FIRST frame with no JavaScript involved — which matters, because the whole problem
+   was that anything depending on JS arrives late. It is removed when the shell reveals. */
+#boot{position:fixed;inset:0;display:grid;place-items:center;background:#FBF4EA;z-index:50;
+  transition:opacity 240ms var(--ease)}
+#boot.gone{opacity:0;pointer-events:none}
+#boot img{width:74px;height:auto;opacity:.9}
+@media (prefers-reduced-motion:no-preference){
+  #boot img{animation:breathe 1.7s ease-in-out infinite}
+}
+@keyframes breathe{0%,100%{opacity:.45;transform:scale(.97)}50%{opacity:1;transform:scale(1)}}
 @media (min-width:900px){
   body{background:#EFE7DA;align-items:center}
   .shell{height:min(920px,96dvh);border-radius:30px;
@@ -499,6 +512,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .bmock .bbar{height:5px;border-radius:3px;width:60%;margin-bottom:4px}
 .bmock .bln{height:4px;border-radius:3px;width:82%;opacity:.5}
 </style></head><body>
+<div id="boot"><img src="suara-mark-tight.svg" alt="Suara"></div>
 <div class="shell boot" id="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
   <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
@@ -533,7 +547,8 @@ const skipBtn = document.getElementById('skip'), backBtn = document.getElementBy
 const shellEl = document.getElementById('shell');
 // ⛔ last-resort reveal: if anything above throws, the page must not stay blank forever.
 // A loading state that can get stuck is worse than the flash it replaced.
-setTimeout(() => shellEl.classList.remove('boot'), 2500);
+setTimeout(() => { shellEl.classList.remove('boot');
+  const bs = document.getElementById('boot'); if (bs) { bs.classList.add('gone'); setTimeout(() => bs.remove(), 400); } }, 2500);
 backBtn.innerHTML = svg('arrow');
 let i = 0, lastScale = 1;
 const answers = {};   // screen index -> {text, picked:Set}
@@ -1333,7 +1348,9 @@ function render(rev) {
     el.classList.remove('pre'); el.classList.add('in');
     // first paint only: the shell has been hiding the half-built chrome until now
     if (shellEl.classList.contains('boot')) {
-      const show = () => shellEl.classList.remove('boot');
+      const show = () => { shellEl.classList.remove('boot');
+        const bs = document.getElementById('boot');
+        if (bs) { bs.classList.add('gone'); setTimeout(() => bs.remove(), 400); } };
       // wait for the webfont too, or the text reflows immediately after we fade in — but never
       // hang on it: a font that fails to load must not leave the page blank.
       if (document.fonts && document.fonts.ready) {
