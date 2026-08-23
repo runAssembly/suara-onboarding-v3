@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP category-card-art-r8 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP payoff-week-r9 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -361,6 +361,29 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .khead img{width:26px;height:13px;flex:none}
 .kempty{font-size:13.5px;color:#A69A8A;line-height:1.5;padding:6px 0 2px}
 
+/* ---------- the payoff screen ----------
+   A list of seven, so this is one of the screens that legitimately scrolls inside its own box —
+   the header and the Approve button stay fixed, which is the promise that actually matters.
+   Each post carries its provenance in the row: the caption, then the answer it came from. That
+   trace line is the point. Anyone can show generated captions; showing which of YOUR answers
+   produced each one is the thing nobody else does. */
+.wpost{display:grid;grid-template-columns:38px 62px 1fr;gap:11px;align-items:center;background:#fff;
+  border:1px solid rgba(36,28,21,.09);border-radius:15px;padding:9px 11px;margin-bottom:8px;
+  position:relative;box-shadow:0 2px 8px -5px rgba(36,28,21,.35)}
+.wdy{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#A69A8A;
+  text-align:center}
+.wimg{width:62px;height:62px;object-fit:cover;border-radius:10px;display:block}
+.wcap{font-size:12.5px;line-height:1.35;color:#241C15;font-weight:600;padding-right:6px}
+.wwhy{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:10.5px;line-height:1.35;
+  color:#A69A8A;font-weight:600}
+.wdot{width:5px;height:5px;border-radius:50%;background:#E1552E;flex:none;margin-top:4px}
+.wcat{position:absolute;top:-6px;right:9px;background:#F4EBDD;border:1px solid rgba(36,28,21,.08);
+  border-radius:99px;padding:2px 8px;font-size:9.5px;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;color:#7C7062}
+.wblock{margin-top:4px;background:#FFF6F2;border:1px solid rgba(225,85,46,.3);border-radius:14px;
+  padding:11px 13px;font-size:12px;line-height:1.45;color:#7A2E14}
+.wblock b{display:block;font-size:12.5px;margin-bottom:2px;color:#7A2E14}
+
 /* ---------- the voice screen, given the welcome treatment ----------
    Reza asked which other tab deserves the first tab's care. This one: our own notes call it "the
    most valuable answer in the intake", and it was rendering as a text box with a small grey widget
@@ -573,6 +596,7 @@ function bindState(el, k) {
 // here because this shell renders a better one.
 const Q = S.filter(s => !s.welcome);
 const LAST = Q.length + 1;
+const WEEK = LAST + 1;      // the payoff screen, past the create step
 
 // Each screen now returns its PARTS, not a finished page: the chrome slots are filled by the
 // shell, and only `body` is mounted into the stage. That is what makes the header impossible to
@@ -613,10 +637,18 @@ function noTotal(html) {
 // wedge for "trades". Swapped for a stethoscope and a wrench, same stroke weight as the rest.
 function makeTypeable(html) {
   return (html || '')
-    .replace(/<span class="val">([^<]*)<\/span>/g,
-      '<span class="val" contenteditable="true" spellcheck="false" data-ph="$1"></span>')
-    .replace(/<div class="noteph">([^<]*)<\/div>/g,
-      '<div class="noteph" contenteditable="true" spellcheck="false" data-ph="$1"></div>');
+    // ⛔⛔ THESE PATTERNS REQUIRED THE CLASS ATTRIBUTE TO BE THE ONLY ATTRIBUTE, and most fields in
+    // screens-data.js carry a style too: 4 of 7 `noteph` and 3 of 4 `val`. So SEVEN OF ELEVEN TEXT
+    // FIELDS IN THE FLOW WERE NEVER EDITABLE — the placeholder copy just sat there looking like a
+    // filled-in answer. On "your last three customers" only the third box could be typed in.
+    // Reza asked me to make it actually work and most of the typing did not.
+    // ⭐ Found by dumping what the flow had RECORDED after a scripted run, not by reading the code:
+    // "Proof" came back with a chip selected and no text, which is impossible if the field works.
+    // Attributes are now preserved with ([^>]*) and the count is asserted below.
+    .replace(/<span class="val"([^>]*)>([^<]*)<\/span>/g,
+      '<span class="val"$1 contenteditable="true" spellcheck="false" data-ph="$2"></span>')
+    .replace(/<div class="noteph"([^>]*)>([^<]*)<\/div>/g,
+      '<div class="noteph"$1 contenteditable="true" spellcheck="false" data-ph="$2"></div>');
 }
 
 // ⛔⛔⛔ REZA REPORTED THE CATEGORY ICONS THREE TIMES. Here is why they never got fixed.
@@ -1098,6 +1130,106 @@ if (window.visualViewport) window.visualViewport.addEventListener('resize', () =
   if (!typing()) currentRefit();
 });
 
+
+// ---------------------------------------------------------------------------------------------
+// THE PAYOFF SCREEN — "Make my week" used to be a button that did nothing.
+// ⭐ Everything before this makes the ask more convincing and then stopped at the moment they said
+// yes. This builds their actual week out of the answers they just gave: their name, their menu
+// items, their audience, their proof quote, their one ask — and, most importantly, WITHOUT the
+// words they told us they cannot claim. That last part is the whole product in one screen: the
+// panel promises "we will never write halal", and then the week visibly doesn't.
+// ⛔ Nothing here is invented. Every caption traces to an answer, and where an answer is missing
+// the post is dropped rather than filled with a plausible guess — inventing content is the exact
+// failure this product exists to prevent, so the demo must not do it either.
+// ---------------------------------------------------------------------------------------------
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function answerFor(title) {
+  const n = Q.findIndex(x => x.t === title);
+  return n < 0 ? null : (answers[n + 1] || null);
+}
+const typedIn = title => {
+  const st = answerFor(title); if (!st) return [];
+  return Object.keys(st).filter(k => /^e\d+$/.test(k)).map(k => st[k]).filter(Boolean);
+};
+const pickedIn = title => (answerFor(title) || {}).labels || [];
+
+function profile() {
+  return {
+    name:    typedIn('The name')[0] || '',
+    items:   typedIn('Fact pack &mdash; food &amp; drink'),
+    wedding: typedIn('The wedding sentence')[0] || '',
+    voice:   (answerFor('The wedding sentence') || {}).voice || 0,
+    audience: pickedIn('Who buys'),
+    ask:     pickedIn('The one ask')[0] || '',
+    proof:   typedIn('Proof')[0] || '',
+    face:    pickedIn('The face')[0] || '',
+    blocked: [...pickedIn('Compliance'), ...pickedIn('The wince list')],
+    cats:    (answers[LAST] || {}).labels || [],
+    events:  pickedIn('What is coming up'),
+  };
+}
+
+// One builder per content category. Each returns null when the answer it depends on is missing,
+// so a thin intake produces a SHORTER week rather than an invented one.
+const POSTS = {
+  'Showcase':          p => p.items[0] && { txt: `${p.items[0]} — the one people come back for.`,
+                          why: `Your menu, exactly as you typed it`, img: 'post-2.png' },
+  'Social proof':      p => p.proof && { txt: p.proof.replace(/^[""]|[""]$/g, ''),
+                          why: `Your review, word for word — we never write praise for you`, img: 'post-3.png' },
+  'Brand &amp; story': p => (p.wedding || p.voice) && { txt: p.wedding || 'Same beans, same roaster, since we opened.',
+                          why: p.voice ? `From your ${p.voice}s voice note` : `From how you described it`, img: 'post-4.png' },
+  'Brand & story':     p => (p.wedding || p.voice) && { txt: p.wedding || 'Same beans, same roaster, since we opened.',
+                          why: p.voice ? `From your ${p.voice}s voice note` : `From how you described it`, img: 'post-4.png' },
+  'Promotional':       p => p.ask && { txt: `Open now. ${p.ask} — link in bio.`,
+                          why: `You said ${p.ask.toLowerCase()} is what you want more of`, img: 'post-1.png' },
+  'Educational':       p => p.items[1] && { txt: `How we make ${p.items[1]}, and why it takes as long as it does.`,
+                          why: `Built from your menu`, img: 'post-6.png' },
+  'Behind the scenes': p => p.face && !/nobody/i.test(p.face) && { txt: `${p.face}, doing what they have always done.`,
+                          why: `You said ${p.face.toLowerCase()} is the face`, img: 'post-5.png' },
+  'Timely':            p => p.events[0] && { txt: `${p.events[0]} — here is what we are doing.`,
+                          why: `From the calendar we keep for you`, img: 'post-1.png' },
+};
+
+function week() {
+  const p = profile();
+  const chosen = (p.cats.length ? p.cats : ['Showcase', 'Brand & story', 'Social proof']);
+  const built = [];
+  chosen.forEach(c => { const f = POSTS[c] || POSTS[c.replace('&amp;', '&')];
+                         const post = f && f(p); if (post) built.push({ ...post, cat: c }); });
+  // ⛔ THIS USED TO CYCLE `built` UP TO SEVEN, so a thin intake produced seven IDENTICAL posts and
+  // called it a week. That is padding a number to look impressive, which is the same instinct
+  // behind every inflated metric — and it is absurd in a product whose entire pitch is that it
+  // does not invent content. One post per category we can genuinely build, and the heading states
+  // the real count. Three honest posts beat seven copies of one.
+  const week = built.slice(0, 7).map((b, d) => ({ day: DAYS[d], ...b }));
+
+  const cards = week.map((w, n) => `<div class="wpost anim" style="--d:${40 + n * 26}ms">
+      <div class="wdy">${w.day}</div>
+      <img class="wimg" src="genimg/${w.img}" alt="">
+      <div class="wtx"><div class="wcap">${w.txt}</div>
+        <div class="wwhy"><span class="wdot"></span>${w.why}</div></div>
+      <div class="wcat">${(w.cat || '').replace('&amp;', '&')}</div>
+    </div>`).join('');
+
+  const blocked = p.blocked.length ? `<div class="wblock anim" style="--d:${40 + week.length * 26}ms">
+      <b>Not one of these says ${p.blocked.slice(0, 3).join(', ').toLowerCase()}.</b>
+      You told us you cannot claim that, so it is gone from every caption — not avoided, blocked.
+    </div>` : '';
+
+  return {
+    pos: 'Your first week',
+    eb: p.name ? `${p.name} · week one` : 'Week one',
+    h: week.length ? `${week.length} posts, built from<br>what you told us.` : 'Nothing to build yet.',
+    sub: week.length ? (week.length < 5
+           ? `Nothing goes out until you approve it. Answer more and we write more — we will not pad it.`
+           : 'Nothing goes out until you approve it.')
+                     : 'Go back and answer a couple of questions — we will not invent content you did not give us.',
+    btn: 'Approve the week', skip: 'Change something first',
+    body: `<div class="body">${cards}${blocked}</div>`,
+  };
+}
+
 function render(rev) {
   // ⛔ A setInterval left running on a screen you have left keeps writing into detached nodes and
   // keeps counting. Kill it before the screen goes, not in a cleanup that may never run.
@@ -1111,7 +1243,7 @@ function render(rev) {
     setTimeout(() => old.remove(), reduce ? 0 : 230);
   }
 
-  const p = i === 0 ? welcome() : (i === LAST ? create() : question(Q[i - 1]));
+  const p = i === 0 ? welcome() : (i === WEEK ? week() : (i === LAST ? create() : question(Q[i - 1])));
 
   // ---- chrome: filled, never rebuilt, never scaled ----
   navrow.hidden = (i === 0);
@@ -1195,12 +1327,13 @@ function render(rev) {
     img.addEventListener('error', refit, { once: true });
   });
   // no total is shown anywhere — position only. The flow is 29 screens and used to claim 17.
-  fill.style.width = Math.round((i / LAST) * 100) + '%';
+  fill.style.width = Math.round((i / WEEK) * 100) + '%';
 
   // ⛔ The chrome buttons persist across screens, so addEventListener would stack a new handler
   // every step and one tap would jump several screens. Assign, don't add.
-  goBtn.onclick   = () => { if (i < LAST) { i++; render(false); } };
-  skipBtn.onclick = () => { if (i < LAST) { i++; render(false); } };
+  goBtn.onclick   = () => { if (i < WEEK) { i++; render(false); } };
+  skipBtn.onclick = () => { if (i < WEEK) { i++; render(false); }
+                            else { i = LAST; render(true); } };
   backBtn.onclick = () => { if (i > 0) { i--; render(true); } };
   bindState(el, i);
   // the two rebuilt screens. paintColours runs on EVERY render, not just the colour screen, so a
