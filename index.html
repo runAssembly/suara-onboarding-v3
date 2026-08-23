@@ -4,9 +4,9 @@
 <link rel="stylesheet" href="flow-shared.css">
 <style>
 :root{
-  --t-in:260ms; --t-out:180ms; --t-back-in:200ms; --t-back-out:140ms;
-  --travel:24px; --stagger:35ms; --t-prog:400ms;
-  --ease:cubic-bezier(.32,.72,0,1);
+  --t-in:300ms; --t-out:220ms;
+  --travel:22px; --stagger:32ms; --t-prog:520ms;
+  --ease:cubic-bezier(.22,.61,.24,1);
 }
 *{box-sizing:border-box}
 /* Reza: "this is going to be used through a browser" + "everything always stays in one screen".
@@ -32,17 +32,25 @@ body{margin:0;background:#FBF4EA;font-family:PJS,ui-sans-serif,system-ui,sans-se
 .scr .body{min-height:0}
 
 /* container fades, children translate — split across DOM levels so it reads as one soft object */
+/* held invisible until it has been measured and scaled — nothing animates before it fits */
+.scr.pre{opacity:0}
 @media (prefers-reduced-motion:no-preference){
   .scr.in{animation:fade var(--t-in) var(--ease) both}
-  .scr.in .anim{animation:slide var(--t-in) var(--ease) both;animation-delay:var(--d,0ms)}
-  .scr.out{animation:fade var(--t-out) var(--ease) reverse both}
-  .scr.in.back{animation-duration:var(--t-back-in)}
-  .scr.in.back .anim{animation-duration:var(--t-back-in);animation-name:slideBack}
-  .scr.out.back{animation-duration:var(--t-back-out)}
+  .scr.in .anim{animation:rise var(--t-in) var(--ease) both;animation-delay:var(--d,0ms)}
+  .scr.out{animation:fadeOut var(--t-out) var(--ease) both}
+  .scr.in.back .anim{animation-name:riseBack}
 }
 @keyframes fade{from{opacity:0}to{opacity:1}}
-@keyframes slide{from{opacity:0;transform:translateX(var(--travel))}to{opacity:1;transform:none}}
-@keyframes slideBack{from{opacity:0;transform:translateX(calc(var(--travel) * -1))}to{opacity:1;transform:none}}
+/* the outgoing screen drifts a little and dims rather than cutting — it overlaps the incoming
+   one, which is what makes a step feel continuous instead of like two slides */
+@keyframes fadeOut{from{opacity:1;transform:translateX(0)}
+  to{opacity:0;transform:translateX(calc(var(--travel) * -0.45))}}
+/* rise, not slide: a small vertical lift with a touch of horizontal reads softer than a pure
+   sideways push, and it does not fight the fit transform on the parent */
+@keyframes rise{from{opacity:0;transform:translate3d(calc(var(--travel) * .5), 10px, 0)}
+  to{opacity:1;transform:none}}
+@keyframes riseBack{from{opacity:0;transform:translate3d(calc(var(--travel) * -.5), 10px, 0)}
+  to{opacity:1;transform:none}}
 
 .bar{height:3px;background:rgba(36,28,21,.09);position:relative;flex:none}
 .bar i{position:absolute;inset:0 auto 0 0;background:#E1552E;border-radius:0 3px 3px 0;
@@ -286,10 +294,10 @@ function render(back) {
     old.classList.remove('in'); old.classList.add('out'); if (back) old.classList.add('back');
     // ⛔ 170ms, not 20ms: an earlier build stripped the class before the out-animation finished,
     // so under reduced motion the fade never completed and the screen snapped.
-    setTimeout(() => old.remove(), reduce ? 0 : 170);
+    setTimeout(() => old.remove(), reduce ? 0 : 230);
   }
   const el = document.createElement('div');
-  el.className = 'scr in' + (back ? ' back' : '');
+  el.className = 'scr pre' + (back ? ' back' : '');
   const fit = document.createElement('div');
   fit.className = 'fit';
   fit.innerHTML = i === 0 ? welcome() : (i === LAST ? create() : makeTypeable(fixIcons(question(Q[i - 1]))));
@@ -317,7 +325,11 @@ function render(back) {
     fit.style.transform = k < 1 ? `scale(${k})` : 'none';
     if (need > avail + 1 && avail / need < 0.62) console.warn('screen', i, 'overflows even at the floor');
   }
-  requestAnimationFrame(refit);
+  // measure, scale, and only then reveal — this is what removed the snap
+  requestAnimationFrame(() => {
+    refit();
+    requestAnimationFrame(() => { el.classList.remove('pre'); el.classList.add('in'); });
+  });
   fit.querySelectorAll('img').forEach(img => {
     if (!img.complete) img.addEventListener('load', refit, { once: true });
     img.addEventListener('error', refit, { once: true });
