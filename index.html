@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP four-fixes-r13 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP malay-r14 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <!-- ⛔ "the text in the text fields take a minute to load". The @font-face rules carry no
@@ -589,6 +589,38 @@ const IC = {
   arrow:'<path d="M15 19l-7-7 7-7"/>'
 };
 const svg = (k, col) => `<svg viewBox="0 0 24 24" fill="none" stroke="${col||'currentColor'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
+const MS = {"Your business": "Perniagaan anda", "Your voice": "Suara anda", "Your customers": "Pelanggan anda", "What it is for": "Tujuannya", "Proof": "Bukti", "Your rules": "Peraturan anda", "Your people": "Orang anda", "Your brand": "Jenama anda", "Publishing": "Penyiaran", "The next eight weeks": "Lapan minggu akan datang", "Food & drink · 2 of 12": "Makanan & minuman · 2 daripada 12", "Your pictures": "Gambar anda", "Last one": "Yang terakhir", "What is your business called?": "Apa nama perniagaan anda?", "What kind of place is it?": "Jenis tempat apa ini?", "How would you describe it to someone at a wedding?": "Macam mana anda terangkan kepada orang di majlis kahwin?", "Who actually buys from you?": "Siapa sebenarnya beli daripada anda?", "Think of your last three customers. What did they come in for?": "Fikirkan tiga pelanggan terakhir anda. Mereka datang untuk apa?", "What do you want more of?": "Anda mahu lebih apa?", "What do people say when they are happy?": "Apa orang cakap bila mereka puas hati?", "What would make you wince?": "Apa yang buat anda rasa tak sedap hati?", "Anything you cannot claim?": "Ada apa-apa yang anda tak boleh dakwa?", "Who is the face of this business?": "Siapa wajah perniagaan ini?", "Send your logo.": "Hantar logo anda.", "Which colours are yours?": "Warna mana milik anda?", "Where does this get posted, and who posts it?": "Di mana ia disiarkan, dan siapa yang siarkan?", "Here is what is coming up.": "Ini yang akan datang.", "What are your five best-known items?": "Apa lima item paling terkenal anda?", "Now the hard part.": "Sekarang bahagian yang susah.", "Here is your first week.": "Ini minggu pertama anda.", "Exactly as it is on your signboard.": "Tepat seperti pada papan tanda anda.", "This decides which questions you get next.": "Ini menentukan soalan seterusnya.", "One sentence, your words. Or just say it out loud.": "Satu ayat, dalam perkataan anda sendiri. Atau sebut sahaja.", "Pick all that fit.": "Pilih semua yang sesuai.", "A few words each is plenty.": "Beberapa perkataan setiap satu sudah cukup.", "Pick one. Everything we write points at it.": "Pilih satu. Semua yang kami tulis akan menuju ke situ.", "Paste a real review or message. Do not tidy it up.": "Tampal ulasan atau mesej sebenar. Jangan dikemas.", "Things we must never post. Nobody can guess these but you.": "Perkara yang kami tidak boleh siarkan langsung. Hanya anda yang tahu.", "For a cafe this is short. For a clinic it is the whole job.": "Untuk kafe ini pendek. Untuk klinik inilah kerjanya.", "If anyone.": "Kalau ada.", "A photo of your signboard works too.": "Gambar papan tanda pun boleh.", "We pulled these from your logo. Change any of them.": "Kami ambil ini daripada logo anda. Tukar mana-mana.", "Be honest — this is the bit that usually breaks.": "Jujur — bahagian ini yang selalu bermasalah.", "We keep the calendar. Tick the ones you want posts for.": "Kami simpan kalendar. Tandakan yang anda mahu post.", "Exactly as they appear on your menu.": "Tepat seperti dalam menu anda.", "Fifteen photos. The one thing we genuinely cannot do for you.": "Lima belas gambar. Satu-satunya perkara yang kami memang tak boleh buat untuk anda.", "Six posts, built from your answers.": "Enam post, dibina daripada jawapan anda.", "I already have an account": "Saya sudah ada akaun", "Skip for now": "Langkau dahulu", "None of these fit": "Tiada yang sesuai", "Skip — I will record it later": "Langkau — saya rakam nanti", "Not sure yet": "Belum pasti", "Skip — I will come back to this": "Langkau — saya kembali nanti", "I do not have one yet": "Saya belum ada", "Nothing comes to mind": "Tiada yang terfikir", "Skip — none apply": "Langkau — tiada yang berkenaan", "Decide later": "Putuskan nanti", "I do not have one — make me one": "Saya tiada — buatkan untuk saya", "Use what you found": "Guna apa yang anda jumpa", "I will decide later": "Saya putuskan nanti", "Nothing of my own": "Tiada yang khas", "Fill this in later": "Isi nanti", "Send them on WhatsApp instead": "Hantar melalui WhatsApp sahaja", "Change something first": "Tukar sesuatu dahulu", "Schedule them": "Jadualkan", "Continue": "Teruskan", "Mula": "Mula", "Get started": "Mula", "Your week of posts, done.": "Seminggu post anda, siap.", "Finished posts and stories every month, in your own brand and voice. You just approve.": "Post dan story siap setiap bulan, dalam jenama dan suara anda sendiri. Anda cuma perlu setuju.", "12 posts · 4 stories": "12 post · 4 story", "Brand locked": "Jenama dikunci", "Approved": "Diluluskan", "Now let's make your first week.": "Sekarang mari buat minggu pertama anda.", "We've ticked a good opening mix. Change it if you want — or leave it and we'll get on with it.": "Kami sudah tandakan gabungan permulaan yang baik. Tukar kalau mahu — atau biarkan dan kami teruskan.", "You approve everything before it goes anywhere. Nothing posts by itself.": "Anda luluskan semuanya sebelum ia keluar. Tiada apa yang tersiar sendiri.", "Make my week": "Buatkan minggu saya", "Just run a good mix": "Jalankan gabungan yang baik", "Approve the week": "Luluskan minggu ini", "Suara knows": "Suara tahu", "Locked in": "Sudah dikunci", "Never again": "Tidak sekali-kali", "Back to the question": "Kembali ke soalan", "Nothing goes out until you approve it.": "Tiada apa keluar sebelum anda luluskan.", "Tap and just talk.": "Tekan dan cakap sahaja.", "Twenty seconds is plenty. Say it how you would at a wedding.": "Dua puluh saat sudah cukup. Cakap macam anda cakap di majlis kahwin.", "Listening — tap to stop.": "Sedang dengar — tekan untuk berhenti.", "Say it once, the way you actually say it.": "Cakap sekali, macam anda betul-betul cakap.", "Tap the button to record it again.": "Tekan butang untuk rakam semula.", "or type it instead": "atau taip sahaja", "or record it instead": "atau rakam sahaja", "Your main colour": "Warna utama anda", "Your second colour": "Warna kedua anda", "Your text colour": "Warna teks anda", "One more": "Satu lagi", "We pulled this from your logo. Change it to whatever is actually yours.": "Kami ambil ini daripada logo anda. Tukar kepada warna yang betul-betul milik anda.", "Hue": "Rona", "Strength": "Kepekatan", "Light or dark": "Cerah atau gelap", "One sentence, in your words.": "Satu ayat, dalam perkataan anda sendiri.", "Your first week": "Minggu pertama anda", "Week one": "Minggu pertama", "Nothing to build yet.": "Belum ada apa-apa untuk dibina.", "Or pick one": "Atau pilih satu", "Cancel": "Batal", "Use this colour": "Guna warna ini"};
+let LANG = 'en';
+const MS_VALUES = new Set(Object.values(MS).map(v => v.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()));
+// ⛔ Keys are normalised: tags stripped, entities decoded, whitespace collapsed. The source copy
+// carries <br> and <span class="sm"> for layout, and a lookup keyed on raw markup would miss every
+// string that has any. Translate the WORDS, not the markup.
+const _dec = (() => { const d = document.createElement('textarea');
+  return t => { d.innerHTML = t; return d.value; }; })();
+function norm(t) {
+  return _dec(String(t || '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
+}
+window.__missingMs = new Set();
+// ⭐ For copy COMPOSED at runtime ("Melur Kopi · minggu pertama"), no static key can ever match, so
+// t() would log correct Malay as a gap forever. tx() picks the language AND registers what it
+// produced as final, so the coverage number keeps meaning "strings with no Malay".
+function tx(en, ms) {
+  const out = LANG === 'ms' ? ms : en;
+  MS_VALUES.add(String(out).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim());
+  return out;
+}
+function t(str) {
+  if (LANG !== 'ms' || !str) return str;
+  const k = norm(str);
+  if (!k) return str;
+  if (MS[k]) return MS[k];
+  // ⛔ Do not log a string that is ALREADY Malay. Some screens compose their copy in-language and
+  // it then passes through here again; logging it made the coverage report list correct Malay as
+  // "untranslated". A metric that counts its own output is worse than no metric — it sent me
+  // looking for 60 bugs that did not exist.
+  if (!MS_VALUES.has(k)) window.__missingMs.add(k);
+  return str;                     // English is the fallback — never a blank
+}
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stage = document.getElementById('stage'), fill = document.getElementById('fill');
 const navrow = document.getElementById('navrow'), headEl = document.getElementById('head');
@@ -894,6 +926,9 @@ function question(s) {
   }
   return {
     pos: s.t || '',
+    // ⛔ NO t() HERE. Translation happens once, in render(), the single point every screen's copy
+    // passes through. Doing it in both places fed Malay back into the lookup, which missed, and
+    // reported the entire flow as untranslated — the metric was measuring my own double call.
     eb:  noTotal(s.eb),
     h:   noTotal(s.h),
     sub: noTotal(s.sub),
@@ -1306,13 +1341,18 @@ function week() {
     </div>` : '';
 
   return {
-    pos: 'Your first week',
-    eb: p.name ? `${p.name} · week one` : 'Week one',
-    h: week.length ? `${week.length} posts, built from<br>what you told us.` : 'Nothing to build yet.',
-    sub: week.length ? (week.length < 5
-           ? `Nothing goes out until you approve it. Answer more and we write more — we will not pad it.`
-           : 'Nothing goes out until you approve it.')
-                     : 'Go back and answer a couple of questions — we will not invent content you did not give us.',
+    pos: t('Your first week'),
+    eb: p.name ? tx(`${p.name} · week one`, `${p.name} · minggu pertama`) : t('Week one'),
+    h: !week.length ? t('Nothing to build yet.')
+       : tx(`${week.length} posts, built from<br>what you told us.`,
+            `${week.length} post, dibina daripada<br>apa yang anda beritahu.`),
+    sub: !week.length
+       ? tx('Go back and answer a couple of questions — we will not invent content you did not give us.',
+            'Kembali dan jawab beberapa soalan — kami tidak akan reka kandungan yang anda tidak beri.')
+       : week.length < 5
+         ? tx('Nothing goes out until you approve it. Answer more and we write more — we will not pad it.',
+              'Tiada apa keluar sebelum anda luluskan. Jawab lebih, kami tulis lebih — kami tidak akan tambah sekadar cukup bilangan.')
+         : t('Nothing goes out until you approve it.'),
     btn: 'Approve the week', skip: 'Change something first',
     body: `<div class="body">${cards}${blocked}</div>`,
   };
@@ -1338,13 +1378,13 @@ function render(rev) {
   backBtn.hidden = (i === 0);
   // the nav row now carries the live "knows" pill instead of a label repeating the question
   headEl.innerHTML = (p.eb || p.h || p.sub)
-    ? `<div class="eyebrow anim" style="--d:0ms">${p.eb || ''}</div>
-       <h1 class="anim" style="--d:30ms">${p.h || ''}</h1>
-       ${p.sub ? `<div class="sub anim" style="--d:60ms">${p.sub}</div>` : ''}`
+    ? `<div class="eyebrow anim" style="--d:0ms">${t(p.eb || '')}</div>
+       <h1 class="anim" style="--d:30ms">${t(p.h || '')}</h1>
+       ${p.sub ? `<div class="sub anim" style="--d:60ms">${t(p.sub)}</div>` : ''}`
     : '';
-  goBtn.innerHTML = p.btn || 'Continue';
+  goBtn.innerHTML = t(p.btn || 'Continue');
   goBtn.classList.toggle('accent', !!p.accent);
-  skipBtn.innerHTML = p.skip || '';
+  skipBtn.innerHTML = t(p.skip || '');
   skipBtn.classList.toggle('ghost', !p.skip);
   // replay the title motion in place. Only the head animates: a nav row and a button that hold
   // perfectly still while the question changes are what make the flow feel like one screen you
@@ -1455,9 +1495,12 @@ function render(rev) {
   wireVoice(el, stateFor(i));
   refreshKnown(false);
   knownBtn.onclick = openKnown;
+  // ⛔ this used to only move a highlight. The button said Bahasa Melayu and nothing happened.
   el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
     el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
     x.classList.add('on');
+    const want = /melayu/i.test(x.textContent) ? 'ms' : 'en';
+    if (want !== LANG) { LANG = want; document.documentElement.lang = want; render(false); }
   }));
 }
 render(false);
