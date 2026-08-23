@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP boot-gate-panel-art-r10 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP welcome-showcase-r12 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -177,13 +177,40 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .pill svg{width:14px;height:14px;flex:none;opacity:.75}
 .pill.ok svg{opacity:1}
 .stack{position:relative;height:clamp(118px, calc(212*var(--u)), 230px);display:grid;place-items:center}
+/* ---------- the welcome showcase ----------
+   Reza: "right now they just all appear, maybe a smoother showcase".
+   ⛔ The blocker was structural, not a timing value: each photo already carries a static
+   `rotate()/translateX()` and each pill a `translateX(-58%)`, and a keyframe that animates
+   transform REPLACES those outright — the card would fly to the middle and the pills would jump.
+   So position and motion now live on different elements: `.pinw`/`.wshot` hold the placement,
+   the child holds the animation. Nothing fights.
+   ⭐ Scoped to `.scr.in` like every other entrance here, because the screen is held at opacity 0
+   until it has been measured — an unscoped animation would play out invisibly and be over before
+   the reveal, which is exactly how you ship a "smooth showcase" nobody ever sees. */
+.pinw{position:absolute;z-index:3}
+.stack .wshot{position:absolute;display:block}
+.stack .wshot img{position:static}
+.stack .wshot:nth-child(1) img{transform:rotate(-9deg) translateX(-88px)}
+.stack .wshot:nth-child(2) img{transform:rotate(4deg) translateX(88px)}
+.stack .wshot:nth-child(3){z-index:2}
+.stack .wshot:nth-child(3) img{width:calc(150*var(--u));height:calc(186*var(--u))}
+@media (prefers-reduced-motion:no-preference){
+  .scr.in .wshot{animation:cardIn 640ms var(--ease) both;animation-delay:var(--d,0ms)}
+  .scr.in .pinw .pill{animation:pillIn 480ms cubic-bezier(.2,.9,.3,1.25) both;
+    animation-delay:var(--d,0ms)}
+}
+/* the cards arrive from slightly below and behind, so the stack assembles rather than blinks */
+@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.9)}}
+/* the pills land after the photos with a small overshoot — they are the claims ABOUT the photos,
+   so they should read as arriving second */
+@keyframes pillIn{from{opacity:0;transform:scale(.72)}}
 .pin{position:absolute;z-index:3}
 /* Bob's positions. They overlap the CARDS on purpose — that is the depth — but the 2x rule from
    better-layout means they must never overlap each OTHER, which is where his collided. */
-.pin.a{top:-6px;left:50%;transform:translateX(-58%)}
-.pin.b{bottom:24px;left:-4px}
-.pin.c{bottom:52px;right:-4px}
-.pin.d{bottom:-14px;left:50%;transform:translateX(-30%)}
+.pinw.a{top:-6px;left:50%;transform:translateX(-58%)}
+.pinw.b{bottom:24px;left:-4px}
+.pinw.c{bottom:52px;right:-4px}
+.pinw.d{bottom:-14px;left:50%;transform:translateX(-30%)}
 .stack img{position:absolute;width:calc(126*var(--u));height:calc(158*var(--u));object-fit:cover;
   border-radius:14px;
   border:4px solid #fff;box-shadow:0 18px 40px -22px rgba(60,40,25,.55)}
@@ -640,16 +667,18 @@ const WEEK = LAST + 1;      // the payoff screen, past the create step
 function welcome() {
   return { btn: 'Get started', body: `<div class="wel">
     <div class="brand anim"><img src="suara-mark.svg" alt=""><b>súara</b></div>
-    <div class="stagewrap anim" style="--d:60ms">
+    <div class="stagewrap" style="--d:60ms">
       <div class="stack">
-        <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
+        <span class="wshot" style="--d:240ms"><img src="p2.jpg" alt=""></span>
+        <span class="wshot" style="--d:370ms"><img src="p3.jpg" alt=""></span>
+        <span class="wshot" style="--d:500ms"><img src="p1.jpg" alt=""></span>
       </div>
-      <span class="pill pin a">${svg('grid')}12 posts &middot; 4 stories</span>
-      <span class="pill pin b">${svg('lock')}Brand locked</span>
-      <span class="pill pin c">${svg('cal')}Tue &middot; 8:00am</span>
-      <span class="pill pin d ok">${svg('check','#2F6B3D')}Approved</span>
+      <span class="pinw a"><span class="pill" style="--d:780ms">${svg('grid')}12 posts &middot; 4 stories</span></span>
+      <span class="pinw b"><span class="pill" style="--d:900ms">${svg('lock')}Brand locked</span></span>
+      <span class="pinw c"><span class="pill" style="--d:1020ms">${svg('cal')}Tue &middot; 8:00am</span></span>
+      <span class="pinw d"><span class="pill ok" style="--d:1170ms">${svg('check','#2F6B3D')}Approved</span></span>
     </div>
-    <div class="welcopy anim" style="--d:120ms">
+    <div class="welcopy anim" style="--d:600ms">
       <h1>Your week of<br>posts, done.</h1>
       <p>Finished posts and stories every month, in your own brand and voice. You just approve.</p>
       <div class="lang">
