@@ -1,9 +1,18 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP welcome-showcase-r12 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP four-fixes-r13 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
+<!-- ⛔ "the text in the text fields take a minute to load". The @font-face rules carry no
+     `font-display`, so the browser default is BLOCK: up to 3 seconds of INVISIBLE text while a
+     12KB file downloads. Measured `document.fonts.status: loading` three seconds after load.
+     The fix is `font-display:swap` below — text is readable in the fallback from the first frame
+     and upgrades when the real font lands.
+     ⛔ I also added <link rel=preload crossorigin> here and had to take it out: a font preload
+     must be `crossorigin`, and that forces CORS mode, which FAILS over file:// — so every local
+     test run filled with CORS errors. The fonts are same-origin and 12KB; swap already solves the
+     visible problem, and a micro-optimisation that breaks the test harness is a bad trade. -->
 <link rel="stylesheet" href="flow-shared.css">
 <style>
 :root{
@@ -12,6 +21,12 @@
   --ease:cubic-bezier(.22,.61,.24,1);
 }
 *{box-sizing:border-box}
+/* the shared stylesheet declares these without font-display; restate them with swap so the
+   browser never holds text back waiting for the file */
+@font-face{font-family:PJS;src:url(fonts/plus-jakarta-sans-latin-400-normal.woff2)format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:PJS;src:url(fonts/plus-jakarta-sans-latin-500-normal.woff2)format('woff2');font-weight:500;font-display:swap}
+@font-face{font-family:PJS;src:url(fonts/plus-jakarta-sans-latin-600-normal.woff2)format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:PJS;src:url(fonts/plus-jakarta-sans-latin-700-normal.woff2)format('woff2');font-weight:700;font-display:swap}
 /* Reza: "this is going to be used through a browser" + "everything always stays in one screen".
    So: no fake phone chrome, no page scroll ever, and the whole thing sized off dvh so mobile
    browser chrome appearing/disappearing cannot introduce a scrollbar. Everything below scales
@@ -178,39 +193,45 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .pill.ok svg{opacity:1}
 .stack{position:relative;height:clamp(118px, calc(212*var(--u)), 230px);display:grid;place-items:center}
 /* ---------- the welcome showcase ----------
-   Reza: "right now they just all appear, maybe a smoother showcase".
-   ⛔ The blocker was structural, not a timing value: each photo already carries a static
-   `rotate()/translateX()` and each pill a `translateX(-58%)`, and a keyframe that animates
-   transform REPLACES those outright — the card would fly to the middle and the pills would jump.
-   So position and motion now live on different elements: `.pinw`/`.wshot` hold the placement,
-   the child holds the animation. Nothing fights.
-   ⭐ Scoped to `.scr.in` like every other entrance here, because the screen is held at opacity 0
-   until it has been measured — an unscoped animation would play out invisibly and be over before
-   the reveal, which is exactly how you ship a "smooth showcase" nobody ever sees. */
-.pinw{position:absolute;z-index:3}
-.stack .wshot{position:absolute;display:block}
-.stack .wshot img{position:static}
-.stack .wshot:nth-child(1) img{transform:rotate(-9deg) translateX(-88px)}
-.stack .wshot:nth-child(2) img{transform:rotate(4deg) translateX(88px)}
-.stack .wshot:nth-child(3){z-index:2}
-.stack .wshot:nth-child(3) img{width:calc(150*var(--u));height:calc(186*var(--u))}
+   ⛔⛔ MY FIRST ATTEMPT HID THE MIDDLE PHOTO. To avoid a keyframe clobbering each card's static
+   `rotate()/translateX()`, I wrapped every photo and pill in an absolutely-positioned span and
+   animated the wrapper. But a `position:absolute` wrapper with no offsets inside a
+   `display:grid; place-items:center` stack does not sit where its content used to — measured, the
+   centre card's image rendered at x=32 instead of x=195, landing underneath the left card. I fixed
+   a transform conflict by introducing a layout bug, which is a worse trade.
+   ✅ No wrappers. Each element keeps its own placement transform, and the keyframes RESTATE that
+   transform in both `from` and `to` with the same functions in the same order, so the browser
+   interpolates cleanly and the resting position is untouched. More verbose, and it cannot move
+   anything by accident. */
 @media (prefers-reduced-motion:no-preference){
-  .scr.in .wshot{animation:cardIn 640ms var(--ease) both;animation-delay:var(--d,0ms)}
-  .scr.in .pinw .pill{animation:pillIn 480ms cubic-bezier(.2,.9,.3,1.25) both;
-    animation-delay:var(--d,0ms)}
+  .scr.in .stack img:nth-child(1){animation:ws1 640ms var(--ease) both;animation-delay:240ms}
+  .scr.in .stack img:nth-child(2){animation:ws2 640ms var(--ease) both;animation-delay:370ms}
+  .scr.in .stack img:nth-child(3){animation:ws3 640ms var(--ease) both;animation-delay:500ms}
+  .scr.in .pin{animation:pinIn 480ms cubic-bezier(.2,.9,.3,1.25) both}
+  .scr.in .pin.a{animation-name:pinInA;animation-delay:780ms}
+  .scr.in .pin.b{animation-delay:900ms}
+  .scr.in .pin.c{animation-delay:1020ms}
+  .scr.in .pin.d{animation-name:pinInD;animation-delay:1170ms}
 }
-/* the cards arrive from slightly below and behind, so the stack assembles rather than blinks */
-@keyframes cardIn{from{opacity:0;transform:translateY(22px) scale(.9)}}
-/* the pills land after the photos with a small overshoot — they are the claims ABOUT the photos,
-   so they should read as arriving second */
-@keyframes pillIn{from{opacity:0;transform:scale(.72)}}
+@keyframes ws1{from{opacity:0;transform:translateY(20px) rotate(-9deg) translateX(-88px) scale(.9)}
+                 to{opacity:1;transform:translateY(0)    rotate(-9deg) translateX(-88px) scale(1)}}
+@keyframes ws2{from{opacity:0;transform:translateY(20px) rotate(4deg) translateX(88px) scale(.9)}
+                 to{opacity:1;transform:translateY(0)    rotate(4deg) translateX(88px) scale(1)}}
+@keyframes ws3{from{opacity:0;transform:translateY(20px) scale(.9)}
+                 to{opacity:1;transform:translateY(0)    scale(1)}}
+/* the pills are claims ABOUT the photos, so they land after them, with a small overshoot */
+@keyframes pinIn {from{opacity:0;transform:scale(.72)} to{opacity:1;transform:scale(1)}}
+@keyframes pinInA{from{opacity:0;transform:translateX(-58%) scale(.72)}
+                    to{opacity:1;transform:translateX(-58%) scale(1)}}
+@keyframes pinInD{from{opacity:0;transform:translateX(-30%) scale(.72)}
+                    to{opacity:1;transform:translateX(-30%) scale(1)}}
 .pin{position:absolute;z-index:3}
 /* Bob's positions. They overlap the CARDS on purpose — that is the depth — but the 2x rule from
    better-layout means they must never overlap each OTHER, which is where his collided. */
-.pinw.a{top:-6px;left:50%;transform:translateX(-58%)}
-.pinw.b{bottom:24px;left:-4px}
-.pinw.c{bottom:52px;right:-4px}
-.pinw.d{bottom:-14px;left:50%;transform:translateX(-30%)}
+.pin.a{top:-6px;left:50%;transform:translateX(-58%)}
+.pin.b{bottom:24px;left:-4px}
+.pin.c{bottom:52px;right:-4px}
+.pin.d{bottom:-14px;left:50%;transform:translateX(-30%)}
 .stack img{position:absolute;width:calc(126*var(--u));height:calc(158*var(--u));object-fit:cover;
   border-radius:14px;
   border:4px solid #fff;box-shadow:0 18px 40px -22px rgba(60,40,25,.55)}
@@ -304,6 +325,8 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .tile .tname{font-size:15px;line-height:1.2;padding-right:26px}
 .tile .tsub{font-size:12px;margin-top:3px;padding-right:8px}
 .tile.hasart svg{display:none}
+/* hidden, not display:none — the layout must not shift when the illustration wins */
+.tile.artpending svg{visibility:hidden}
 .chips{margin-top:10px;gap:7px}
 .sm{margin-top:8px}
 
@@ -667,16 +690,14 @@ const WEEK = LAST + 1;      // the payoff screen, past the create step
 function welcome() {
   return { btn: 'Get started', body: `<div class="wel">
     <div class="brand anim"><img src="suara-mark.svg" alt=""><b>súara</b></div>
-    <div class="stagewrap" style="--d:60ms">
+    <div class="stagewrap anim" style="--d:60ms">
       <div class="stack">
-        <span class="wshot" style="--d:240ms"><img src="p2.jpg" alt=""></span>
-        <span class="wshot" style="--d:370ms"><img src="p3.jpg" alt=""></span>
-        <span class="wshot" style="--d:500ms"><img src="p1.jpg" alt=""></span>
+        <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
       </div>
-      <span class="pinw a"><span class="pill" style="--d:780ms">${svg('grid')}12 posts &middot; 4 stories</span></span>
-      <span class="pinw b"><span class="pill" style="--d:900ms">${svg('lock')}Brand locked</span></span>
-      <span class="pinw c"><span class="pill" style="--d:1020ms">${svg('cal')}Tue &middot; 8:00am</span></span>
-      <span class="pinw d"><span class="pill ok" style="--d:1170ms">${svg('check','#2F6B3D')}Approved</span></span>
+      <span class="pill pin a">${svg('grid')}12 posts &middot; 4 stories</span>
+      <span class="pill pin b">${svg('lock')}Brand locked</span>
+      <span class="pill pin c">${svg('cal')}Tue &middot; 8:00am</span>
+      <span class="pill pin d ok">${svg('check','#2F6B3D')}Approved</span>
     </div>
     <div class="welcopy anim" style="--d:600ms">
       <h1>Your week of<br>posts, done.</h1>
@@ -777,10 +798,15 @@ function fixIcons(root) {
     // icon rather than an empty corner — the art is an upgrade, not a dependency.
     const art = TILEART[name];
     if (art) {
+      t.classList.add('artpending');            // glyph hidden while we find out
       const img = new Image();
       img.className = 'tart'; img.alt = '';
-      img.onload = () => { t.appendChild(img); t.classList.add('hasart'); };
+      img.onload = () => { t.appendChild(img); t.classList.remove('artpending'); t.classList.add('hasart'); };
+      // if it genuinely fails, show the glyph — a fallback that never appears is not a fallback
+      img.onerror = () => t.classList.remove('artpending');
       img.src = art;
+      // and never leave the corner empty for long if the network is crawling
+      setTimeout(() => t.classList.remove('artpending'), 900);
     }
     svg.innerHTML = path;                       // keeps whatever stroke colour the tile already set
     svg.setAttribute('fill', 'none');
@@ -1387,10 +1413,19 @@ function render(rev) {
       } else show();
     }
   };
+  // ⛔ MEASURED: 1075ms of NOTHING VISIBLE between screens on the category step, because the
+  // reveal waited for every image on the incoming screen — six corner illustrations — while the
+  // outgoing screen had already been removed. "When I click next the next stage is not smooth."
+  // The images matter for MEASURING the height, so we do want them; we do not want to hold a
+  // black hole open for a second waiting. Race the wait against a short deadline: normally the
+  // images win, and when they don't the screen still arrives on time and the art fades in after.
   const imgs = [...fit.querySelectorAll('img')].filter(im => !im.complete);
-  Promise.all(imgs.map(im => new Promise(r => {
-    im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true });
-  }))).then(() => requestAnimationFrame(() => {
+  Promise.race([
+    Promise.all(imgs.map(im => new Promise(r => {
+      im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true });
+    }))),
+    new Promise(r => setTimeout(r, 260)),
+  ]).then(() => requestAnimationFrame(() => {
     refit();
     requestAnimationFrame(() => { refit(); requestAnimationFrame(reveal); });
   }));
@@ -1426,4 +1461,18 @@ function render(rev) {
   }));
 }
 render(false);
+
+// ⛔ "the icons of the type business shows up then disappears and the right images show up."
+// The line glyph is the FALLBACK and the illustration replaces it on load, so on a cold cache you
+// watch the swap happen. Two changes, because either alone is not enough:
+//   1. warm the art while they are still reading the welcome screen — by the time they reach the
+//      category step it is in cache and there is nothing to wait for;
+//   2. hold the glyph hidden until we know the outcome (see `.tile.artpending svg` below), so the
+//      user sees ONE icon, never two in sequence.
+// The fallback still does its job: if a file 404s the glyph appears instead of an empty corner.
+requestIdleCallback ? requestIdleCallback(warmArt) : setTimeout(warmArt, 400);
+function warmArt() {
+  Object.values(TILEART).concat(Object.values(CATART))
+    .forEach(src => { const i = new Image(); i.src = src; });
+}
 </script></body></html>
