@@ -1,0 +1,219 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suara onboarding v3</title>
+<link rel="stylesheet" href="flow-shared.css">
+<style>
+:root{
+  --t-in:260ms; --t-out:180ms; --t-back-in:200ms; --t-back-out:140ms;
+  --travel:24px; --stagger:35ms; --t-prog:400ms;
+  --ease:cubic-bezier(.32,.72,0,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EFE7DA;font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;
+  min-height:100vh;display:grid;place-items:center;padding:26px 16px 40px}
+.shell{width:390px;max-width:100%;height:800px;max-height:88vh;background:#FBF4EA;border-radius:38px;
+  box-shadow:0 40px 90px -50px rgba(60,40,25,.6),0 0 0 9px #1B1611;overflow:hidden;position:relative;
+  display:flex;flex-direction:column}
+.stage{position:relative;flex:1;overflow:hidden}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;padding:0;overflow-y:auto}
+
+/* container fades, children translate — split across DOM levels so it reads as one soft object */
+@media (prefers-reduced-motion:no-preference){
+  .scr.in{animation:fade var(--t-in) var(--ease) both}
+  .scr.in .anim{animation:slide var(--t-in) var(--ease) both;animation-delay:var(--d,0ms)}
+  .scr.out{animation:fade var(--t-out) var(--ease) reverse both}
+  .scr.in.back{animation-duration:var(--t-back-in)}
+  .scr.in.back .anim{animation-duration:var(--t-back-in);animation-name:slideBack}
+  .scr.out.back{animation-duration:var(--t-back-out)}
+}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes slide{from{opacity:0;transform:translateX(var(--travel))}to{opacity:1;transform:none}}
+@keyframes slideBack{from{opacity:0;transform:translateX(calc(var(--travel) * -1))}to{opacity:1;transform:none}}
+
+.bar{height:3px;background:rgba(36,28,21,.09);position:relative;flex:none}
+.bar i{position:absolute;inset:0 auto 0 0;background:#E1552E;border-radius:0 3px 3px 0;
+  transition:width var(--t-prog) var(--ease)}
+.navrow{display:flex;align-items:center;gap:12px;padding:14px 20px 4px;flex:none}
+.back{width:34px;height:34px;border-radius:50%;border:1px solid rgba(36,28,21,.14);background:#fff;
+  display:grid;place-items:center;cursor:pointer;transition:opacity 160ms,transform 160ms}
+.back[hidden]{opacity:0;pointer-events:none}
+.back:active{transform:scale(.94)}
+.pos{margin-left:auto;font-size:12.5px;color:#A69A8A;font-weight:600;letter-spacing:.02em}
+
+.body{padding:8px 26px 20px;flex:1}
+.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
+  margin-bottom:10px}
+h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:800}
+.sub{font-size:15px;line-height:1.55;color:#7C7062;margin-bottom:18px}
+.foot{padding:0 26px 26px;flex:none}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#241C15;color:#fff;
+  border:0;width:100%;padding:16px;border-radius:100px;font:inherit;font-size:16px;font-weight:700;
+  cursor:pointer;transition:transform 140ms var(--ease),filter 140ms}
+.btn:active{transform:scale(.985)}
+.btn.accent{background:#E1552E}
+.skip{display:block;width:100%;text-align:center;margin-top:12px;background:none;border:0;
+  color:#A69A8A;font:inherit;font-size:13.5px;cursor:pointer}
+
+/* ---------- welcome (Bob's direction, three faults fixed) ---------- */
+.wel{position:relative;flex:1;display:flex;flex-direction:column;padding:26px 26px 0}
+.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand img{width:38px;height:38px;border-radius:11px}
+.brand b{font-size:25px;color:#E1552E;letter-spacing:-.02em}
+/* FIX 1: the pills were colliding with each other and with the cards. They are now a laid-out
+   row above the stack and a single anchored tag below it — nothing floats. */
+.pillrow{display:flex;gap:8px;justify-content:center;margin:22px 0 12px;flex-wrap:wrap;flex:none}
+.pill{background:#fff;border:1px solid rgba(36,28,21,.08);border-radius:100px;padding:7px 14px;
+  font-size:12.5px;font-weight:700;color:#241C15;box-shadow:0 6px 18px -12px rgba(60,40,25,.5);
+  display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pill.ok{color:#2F6B3D} .pill.ok i{width:7px;height:7px;border-radius:50%;background:#2F6B3D}
+.stack{position:relative;height:210px;flex:none;display:grid;place-items:center}
+.stack img{position:absolute;width:126px;height:158px;object-fit:cover;border-radius:14px;
+  border:4px solid #fff;box-shadow:0 18px 40px -22px rgba(60,40,25,.55)}
+.stack img:nth-child(1){transform:rotate(-9deg) translateX(-88px)}
+.stack img:nth-child(2){transform:rotate(4deg) translateX(88px)}
+.stack img:nth-child(3){width:150px;height:186px;z-index:2}
+/* FIX 2: the dead gap between the pills and the headline is closed — the copy block starts
+   directly under the stack instead of 200px below it. */
+.welcopy{margin-top:18px;flex:1}
+.welcopy h1{font-size:40px;line-height:1.02;letter-spacing:-.035em;margin-bottom:10px}
+/* FIX 3: the count is stated ONCE, in the pill. The sentence says what it is, not how many. */
+.welcopy p{font-size:15.5px;line-height:1.5;color:#7C7062;margin:0}
+.lang{display:flex;gap:10px;margin:18px 0 0}
+.lang button{flex:1;padding:14px;border-radius:100px;border:1px solid rgba(36,28,21,.12);
+  background:#fff;font:inherit;font-size:14.5px;font-weight:700;color:#241C15;cursor:pointer;
+  transition:background 160ms,color 160ms,border-color 160ms}
+.lang button.on{background:#E1552E;border-color:#E1552E;color:#fff}
+
+/* ---------- the new final screen ---------- */
+.cats{display:flex;flex-direction:column;gap:9px;margin-top:4px}
+.cat{display:grid;grid-template-columns:22px 1fr;grid-template-rows:auto auto;gap:2px 12px;
+  text-align:left;background:#fff;border:1px solid rgba(36,28,21,.1);border-radius:15px;
+  padding:14px 16px;font:inherit;cursor:pointer;
+  transition:border-color 160ms var(--ease),background 160ms var(--ease)}
+/* flow-shared.css styles a .tick of its own (green, filled) and it was bleeding through, so
+   unticked boxes rendered as solid green — reading as "already on". Reset explicitly. */
+.cat .tick{grid-row:1/3;width:22px;height:22px;border-radius:7px;
+  border:1.5px solid rgba(36,28,21,.2)!important;background:#fff!important;
+  align-self:center;position:relative;box-shadow:none!important;
+  transition:background 160ms,border-color 160ms}
+.cat .tick::after{content:"";position:absolute;left:7px;top:3px;width:5px;height:10px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);
+  transition:transform 160ms var(--ease)}
+.cat.on{border-color:#E1552E;background:#FDF0EA}
+.cat.on .tick{background:#E1552E!important;border-color:#E1552E!important}
+.cat.on .tick::after{transform:rotate(45deg) scale(1)}
+.cn{font-size:15px;font-weight:700;color:#241C15}
+.cd{font-size:13px;color:#7C7062;grid-column:2}
+.note{margin-top:14px;font-size:13px;color:#A69A8A;line-height:1.5}
+</style></head><body>
+<div class="shell">
+  <div class="bar"><i id="fill" style="width:0%"></i></div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script src="screens-data.js"></script>
+<script>
+const CATS_HTML = `<button class="cat" data-cat="Promotional"><span class="tick" aria-hidden="true"></span><span class="cn">Promotional</span><span class="cd">Offers, what's new, book or buy now</span></button><button class="cat on" data-cat="Showcase"><span class="tick" aria-hidden="true"></span><span class="cn">Showcase</span><span class="cd">Your products, dishes or services</span></button><button class="cat on" data-cat="Brand &amp; story"><span class="tick" aria-hidden="true"></span><span class="cn">Brand &amp; story</span><span class="cd">Your vibe, values, who you are</span></button><button class="cat" data-cat="Educational"><span class="tick" aria-hidden="true"></span><span class="cn">Educational</span><span class="cd">Tips, how it works, know-how</span></button><button class="cat on" data-cat="Social proof"><span class="tick" aria-hidden="true"></span><span class="cn">Social proof</span><span class="cd">Reviews, results, what people say</span></button><button class="cat" data-cat="Behind the scenes"><span class="tick" aria-hidden="true"></span><span class="cn">Behind the scenes</span><span class="cd">The people and the making</span></button><button class="cat" data-cat="Timely"><span class="tick" aria-hidden="true"></span><span class="cn">Timely</span><span class="cd">Seasonal, local, events</span></button>`;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage'), fill = document.getElementById('fill');
+let i = 0, dir = 1;
+
+// Screen 0 is the welcome; 1..N-2 are the real questions from screens-data.js; the last is the
+// new "make your content" step. S already excludes nothing — its own welcome entry is skipped
+// here because this shell renders a better one.
+const Q = S.filter(s => !s.welcome);
+const LAST = Q.length + 1;
+
+function welcome() {
+  return `<div class="wel">
+    <div class="brand anim"><img src="suara-mark.svg" alt=""><b>súara</b></div>
+    <div class="pillrow anim" style="--d:40ms">
+      <span class="pill">12 posts &middot; 4 stories</span>
+      <span class="pill">Brand locked</span>
+      <span class="pill ok"><i></i>Approved</span>
+    </div>
+    <div class="stack anim" style="--d:80ms">
+      <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
+    </div>
+    <div class="welcopy anim" style="--d:120ms">
+      <h1>Your week of<br>posts, done.</h1>
+      <p>Finished posts and stories every month, in your own brand and voice. You just approve.</p>
+      <div class="lang">
+        <button class="on">Bahasa Melayu</button><button>English</button>
+      </div>
+    </div>
+  </div>
+  <div class="foot anim" style="--d:160ms"><button class="btn" id="go">Get started</button></div>`;
+}
+
+// ⛔ Screen 17's own body carries "STEP 17 OF 17" — the false total, baked into the content
+// rather than the shell. Caught by walking the flow, not by reading the shell. Stripped here so
+// v3 keeps its one promise: it never states a total, because nobody has measured the real one.
+function noTotal(html) {
+  return (html || '')
+    .replace(/step\s*\d{1,2}\s*of\s*\d{1,2}/gi, '')
+    .replace(/tujuh belas soalan/gi, 'Beberapa soalan')
+    .replace(/about\s*3\s*minutes?/gi, '');
+}
+
+function question(s) {
+  return `<div class="navrow anim"><button class="back" id="back">&larr;</button>
+      <span class="pos">${s.t || ''}</span></div>
+    <div class="body">
+      <div class="eyebrow anim" style="--d:30ms">${noTotal(s.eb)}</div>
+      <h1 class="anim" style="--d:60ms">${noTotal(s.h)}</h1>
+      <div class="sub anim" style="--d:90ms">${noTotal(s.sub)}</div>
+      <div class="anim" style="--d:120ms">${noTotal(s.body)}</div>
+    </div>
+    <div class="foot anim" style="--d:150ms">
+      <button class="btn" id="go">${noTotal(s.btn) || 'Continue'}</button>
+      ${s.skip ? `<button class="skip" id="skip">${s.skip}</button>` : ''}
+    </div>`;
+}
+
+function create() {
+  return `<div class="navrow anim"><button class="back" id="back">&larr;</button></div>
+    <div class="body">
+      <div class="eyebrow anim" style="--d:30ms">Last one</div>
+      <h1 class="anim" style="--d:60ms">Now let's make<br>your first week.</h1>
+      <div class="sub anim" style="--d:90ms">We've ticked a good opening mix. Change it if you
+        want — or leave it and we'll get on with it.</div>
+      <div class="cats anim" style="--d:120ms">${CATS_HTML}</div>
+      <p class="note anim" style="--d:150ms">You approve everything before it goes anywhere.
+        Nothing posts by itself.</p>
+    </div>
+    <div class="foot anim" style="--d:180ms">
+      <button class="btn accent" id="go">Make my week</button>
+      <button class="skip" id="skip">Just run a good mix</button>
+    </div>`;
+}
+
+function render(back) {
+  const old = stage.querySelector('.scr');
+  if (old) {
+    old.classList.remove('in'); old.classList.add('out'); if (back) old.classList.add('back');
+    // ⛔ 170ms, not 20ms: an earlier build stripped the class before the out-animation finished,
+    // so under reduced motion the fade never completed and the screen snapped.
+    setTimeout(() => old.remove(), reduce ? 0 : 170);
+  }
+  const el = document.createElement('div');
+  el.className = 'scr in' + (back ? ' back' : '');
+  el.innerHTML = i === 0 ? welcome() : (i === LAST ? create() : question(Q[i - 1]));
+  stage.appendChild(el);
+  // no total is shown anywhere — position only. The flow is 29 screens and used to claim 17.
+  fill.style.width = Math.round((i / LAST) * 100) + '%';
+
+  el.querySelector('#go')?.addEventListener('click', () => { if (i < LAST) { i++; render(false); } });
+  el.querySelector('#skip')?.addEventListener('click', () => { if (i < LAST) { i++; render(false); } });
+  const b = el.querySelector('#back');
+  if (b) { if (i === 0) b.hidden = true;
+    b.addEventListener('click', () => { if (i > 0) { i--; render(true); } }); }
+  el.querySelectorAll('.cat').forEach(c =>
+    c.addEventListener('click', () => c.classList.toggle('on')));
+  el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
+    el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
+    x.classList.add('on');
+  }));
+}
+render(false);
+</script></body></html>

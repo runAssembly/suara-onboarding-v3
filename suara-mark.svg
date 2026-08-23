@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Suara">
+  <!-- Vector twin of the generated ripple mark. The render is the hero presentation; THIS is the
+       one that ships — exact geometry, scales to a favicon without mush, and can be recoloured.
+       Four arcs radiating from a centre point: one voice, carried outward. -->
+  <defs>
+    <linearGradient id="s-warm" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0"   stop-color="#FF5A45"/>
+      <stop offset="0.55" stop-color="#FF8A4B"/>
+      <stop offset="1"   stop-color="#FFC24B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Arcs drawn as stroked semicircles, thinning outward so the eye reads centre-out motion.
+       Round caps keep it friendly rather than technical. -->
+  <!-- translate y=364, not 300: the arcs are semicircles so all the ink sits ABOVE the origin.
+       Anchored at the box centre the mark reads bottom-heavy with dead space under it. This
+       centres the ink optically inside the 512 box, which is what an app icon needs. -->
+  <g fill="none" stroke="url(#s-warm)" stroke-linecap="round" transform="translate(256 364)">
+    <path d="M -46 0 A 46 46 0 0 1 46 0"   stroke-width="34"/>
+    <path d="M -104 0 A 104 104 0 0 1 104 0" stroke-width="30"/>
+    <path d="M -160 0 A 160 160 0 0 1 160 0" stroke-width="26"/>
+    <path d="M -214 0 A 214 214 0 0 1 214 0" stroke-width="22"/>
+  </g>
+</svg>
