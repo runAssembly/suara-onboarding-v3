@@ -9,7 +9,7 @@
   --ease:cubic-bezier(.32,.72,0,1);
 }
 *{box-sizing:border-box}
-body{margin:0;background:#EFE7DA;font-family:'Plus Jakarta Sans',ui-sans-serif,system-ui,sans-serif;
+body{margin:0;background:#EFE7DA;font-family:PJS,ui-sans-serif,system-ui,sans-serif;
   min-height:100vh;display:grid;place-items:center;padding:26px 16px 40px}
 .shell{width:390px;max-width:100%;height:800px;max-height:88vh;background:#FBF4EA;border-radius:38px;
   box-shadow:0 40px 90px -50px rgba(60,40,25,.6),0 0 0 9px #1B1611;overflow:hidden;position:relative;
@@ -41,9 +41,9 @@ body{margin:0;background:#EFE7DA;font-family:'Plus Jakarta Sans',ui-sans-serif,s
 .pos{margin-left:auto;font-size:12.5px;color:#A69A8A;font-weight:600;letter-spacing:.02em}
 
 .body{padding:8px 26px 20px;flex:1}
-.eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
+.eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#E1552E;
   margin-bottom:10px}
-h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:800}
+h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 0 8px;font-weight:700}
 .sub{font-size:15px;line-height:1.55;color:#7C7062;margin-bottom:18px}
 .foot{padding:0 26px 26px;flex:none}
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:#241C15;color:#fff;
@@ -61,12 +61,19 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 .brand b{font-size:25px;color:#E1552E;letter-spacing:-.02em}
 /* FIX 1: the pills were colliding with each other and with the cards. They are now a laid-out
    row above the stack and a single anchored tag below it — nothing floats. */
-.pillrow{display:flex;gap:8px;justify-content:center;margin:22px 0 12px;flex-wrap:wrap;flex:none}
+.stagewrap{position:relative;margin:auto 0 6px;flex:none}
 .pill{background:#fff;border:1px solid rgba(36,28,21,.08);border-radius:100px;padding:7px 14px;
   font-size:12.5px;font-weight:700;color:#241C15;box-shadow:0 6px 18px -12px rgba(60,40,25,.5);
   display:flex;align-items:center;gap:6px;white-space:nowrap}
 .pill.ok{color:#2F6B3D} .pill.ok i{width:7px;height:7px;border-radius:50%;background:#2F6B3D}
-.stack{position:relative;height:210px;flex:none;display:grid;place-items:center}
+.stack{position:relative;height:212px;display:grid;place-items:center}
+.pin{position:absolute;z-index:3}
+/* Bob's positions. They overlap the CARDS on purpose — that is the depth — but the 2x rule from
+   better-layout means they must never overlap each OTHER, which is where his collided. */
+.pin.a{top:-6px;left:50%;transform:translateX(-58%)}
+.pin.b{bottom:24px;left:-4px}
+.pin.c{bottom:52px;right:-4px}
+.pin.d{bottom:-14px;left:50%;transform:translateX(-30%)}
 .stack img{position:absolute;width:126px;height:158px;object-fit:cover;border-radius:14px;
   border:4px solid #fff;box-shadow:0 18px 40px -22px rgba(60,40,25,.55)}
 .stack img:nth-child(1){transform:rotate(-9deg) translateX(-88px)}
@@ -74,7 +81,7 @@ h1{font-size:27px;line-height:1.18;letter-spacing:-.02em;color:#241C15;margin:0 
 .stack img:nth-child(3){width:150px;height:186px;z-index:2}
 /* FIX 2: the dead gap between the pills and the headline is closed — the copy block starts
    directly under the stack instead of 200px below it. */
-.welcopy{margin-top:18px;flex:1}
+.welcopy{margin-top:28px;margin-bottom:auto}
 .welcopy h1{font-size:40px;line-height:1.02;letter-spacing:-.035em;margin-bottom:10px}
 /* FIX 3: the count is stated ONCE, in the pill. The sentence says what it is, not how many. */
 .welcopy p{font-size:15.5px;line-height:1.5;color:#7C7062;margin:0}
@@ -127,13 +134,14 @@ const LAST = Q.length + 1;
 function welcome() {
   return `<div class="wel">
     <div class="brand anim"><img src="suara-mark.svg" alt=""><b>súara</b></div>
-    <div class="pillrow anim" style="--d:40ms">
-      <span class="pill">12 posts &middot; 4 stories</span>
-      <span class="pill">Brand locked</span>
-      <span class="pill ok"><i></i>Approved</span>
-    </div>
-    <div class="stack anim" style="--d:80ms">
-      <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
+    <div class="stagewrap anim" style="--d:60ms">
+      <div class="stack">
+        <img src="p2.jpg" alt=""><img src="p3.jpg" alt=""><img src="p1.jpg" alt="">
+      </div>
+      <span class="pill pin a">12 posts &middot; 4 stories</span>
+      <span class="pill pin b">Brand locked</span>
+      <span class="pill pin c">Tue &middot; 8:00am</span>
+      <span class="pill pin d ok"><i></i>Approved</span>
     </div>
     <div class="welcopy anim" style="--d:120ms">
       <h1>Your week of<br>posts, done.</h1>
