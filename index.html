@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP selection-glyph-state-r7 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP category-card-art-r8 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -197,8 +197,14 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .cat.on{border-color:#E1552E;background:#FDF0EA}
 .cat.on .tick{background:#E1552E!important;border-color:#E1552E!important}
 .cat.on .tick::after{transform:rotate(45deg) scale(1)}
+.cat{position:relative;overflow:hidden}
+.cat .tart{position:absolute;right:9px;top:50%;transform:translateY(-50%);width:42px;height:42px;
+  object-fit:contain;opacity:.34;pointer-events:none;
+  transition:opacity 200ms var(--ease),transform 240ms var(--ease)}
+.cat.on .tart{opacity:.5;transform:translateY(-50%) scale(1.06) rotate(-3deg)}
+.cn,.cd{position:relative;z-index:1}
 .cn{font-size:15px;font-weight:700;color:#241C15}
-.cd{font-size:13px;color:#7C7062;grid-column:2}
+.cd{font-size:13px;color:#7C7062;grid-column:2;padding-right:44px}
 .note{margin-top:14px;font-size:13px;color:#A69A8A;line-height:1.5}
 
 /* ---------- density ----------
@@ -642,6 +648,27 @@ const TILEICON = {
   'classes or studio':  '<path d="M4 4h7a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4V4z"/><path d="M20 4h-3a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20V4z"/>',
 };
 window.__iconMisses = [];
+const CATART = {
+  'Promotional': 'cardicons/cat-promo.png', 'Showcase': 'cardicons/cat-show.png',
+  'Brand & story': 'cardicons/cat-brand.png', 'Educational': 'cardicons/cat-edu.png',
+  'Social proof': 'cardicons/cat-proof.png', 'Behind the scenes': 'cardicons/cat-bts.png',
+  'Timely': 'cardicons/cat-timely.png',
+};
+window.__catArtMisses = [];
+function catArt(root) {
+  root.querySelectorAll('.cat').forEach(c => {
+    if (c.querySelector('.tart')) return;
+    const src = CATART[c.dataset.cat];
+    // ⛔ record the miss rather than silently rendering a bare card — the whole reason the business
+    // icons survived three reports is that a failure produced no signal.
+    if (!src) { window.__catArtMisses.push(c.dataset.cat || '(no data-cat)'); return; }
+    const img = new Image();
+    img.className = 'tart'; img.alt = '';
+    img.onload = () => c.appendChild(img);     // only mount once it has really decoded
+    img.src = src;
+  });
+}
+
 function fixIcons(root) {
   root.querySelectorAll('.tile').forEach(t => {
     const svg = t.querySelector('svg'); if (!svg) return;
@@ -1181,6 +1208,7 @@ function render(rev) {
   paintColours(el);
   el.querySelectorAll('#swat > div').forEach((d, n) => d.addEventListener('click', () => openSheet(n)));
   fixIcons(el);            // swap category glyphs on the live DOM, by name, and record misses
+  catArt(el);
   wireVoice(el, stateFor(i));
   refreshKnown(false);
   knownBtn.onclick = openKnown;
