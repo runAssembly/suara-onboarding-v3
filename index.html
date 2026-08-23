@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP voice-hero-colour-picker-r2 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP knows-panel-live-controls-r3 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -231,6 +231,48 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 /* the inner ring is now redundant and double-outlined the field */
 [contenteditable]:focus{box-shadow:none}
 .field.on{border-color:rgba(36,28,21,.28);box-shadow:inset 0 1px 2px rgba(36,28,21,.05)}
+/* ...and the same for everything you TAP. `.tile`, `.opt`, `.chip` and `.holrow` shipped with no
+   background at all, so the page cream showed through and a choice read as a dotted outline rather
+   than a card. Reza caught this twice — first the text fields, then these. One rule both times: a
+   control must not share the page's surface. Unselected now sits on white and lifts slightly;
+   selected keeps the coral tint, so the DISTANCE between the two states grows rather than the
+   selected state merely being tinted against an identical background. */
+.tile,.opt,.holrow,.chip{background:#fff;
+  box-shadow:0 1px 2px rgba(36,28,21,.04),0 4px 10px -8px rgba(36,28,21,.28);
+  transition:background 150ms var(--ease),border-color 150ms var(--ease),
+    box-shadow 150ms var(--ease),transform 120ms var(--ease)}
+.tile.sel,.opt.sel,.holrow.sel{background:#FDF0EA;
+  box-shadow:0 5px 15px -8px rgba(225,85,46,.55)}
+.chip.sel{box-shadow:0 5px 13px -7px rgba(36,28,21,.6)}
+.tile:active,.opt:active,.holrow:active,.chip:active{transform:scale(.985)}
+
+/* ---------- "Suara knows N things" ----------
+   Reza: "what else could we do to be more interactive and show value". The nav row was spending
+   its whole width on a label repeating the question already printed underneath it in 23px type.
+   That space now carries the one thing the customer cannot see: what their answers have already
+   DECIDED. It costs zero vertical space, which matters because vertical space is the scarce
+   resource on every screen here.
+   ⭐ It lists CONSEQUENCES, not an echo. Reza's own standing test is "does it give them work, or
+   tell them something they didn't know?" — a summary of what they just typed fails that test.
+   "Halal is now blocked and we will never write it" passes it. */
+.known{margin-left:auto;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid
+  rgba(36,28,21,.1);border-radius:100px;padding:6px 12px 6px 9px;font:inherit;font-size:12px;
+  font-weight:700;color:#241C15;cursor:pointer;white-space:nowrap;
+  box-shadow:0 3px 10px -7px rgba(36,28,21,.5);transition:transform 140ms var(--ease)}
+.known:active{transform:scale(.96)}
+.known[hidden]{display:none}
+.known b{display:grid;place-items:center;min-width:19px;height:19px;border-radius:99px;
+  background:#E1552E;color:#fff;font-size:11px;font-weight:800;padding:0 5px}
+@media (prefers-reduced-motion:no-preference){ .known.bump b{animation:bump 420ms var(--ease)} }
+@keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.35)}100%{transform:scale(1)}}
+.klist{margin:0;padding:0;list-style:none;max-height:46vh;overflow-y:auto;overscroll-behavior:contain}
+.klist li{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid rgba(36,28,21,.07)}
+.klist li:last-child{border-bottom:0}
+.klist .kd{width:7px;height:7px;border-radius:50%;background:#2F6B3D;flex:none;margin-top:6px}
+.klist li.blocked .kd{background:#E1552E}
+.klist .kt{font-size:13.5px;line-height:1.45;color:#241C15}
+.klist .kw{display:block;font-size:11.5px;color:#A69A8A;margin-top:2px}
+.kempty{font-size:13.5px;color:#A69A8A;line-height:1.5;padding:6px 0 2px}
 
 /* ---------- the voice screen, given the welcome treatment ----------
    Reza asked which other tab deserves the first tab's care. This one: our own notes call it "the
@@ -333,7 +375,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 <div class="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
   <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
-    <span class="pos" id="pos"></span></div>
+    <button class="known" id="known" hidden><span>Suara knows</span><b>0</b></button></div>
   <div class="head" id="head"></div>
   <div class="stage" id="stage"></div>
   <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
@@ -359,7 +401,7 @@ const svg = (k, col) => `<svg viewBox="0 0 24 24" fill="none" stroke="${col||'cu
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const stage = document.getElementById('stage'), fill = document.getElementById('fill');
 const navrow = document.getElementById('navrow'), headEl = document.getElementById('head');
-const posEl = document.getElementById('pos'), goBtn = document.getElementById('go');
+const goBtn = document.getElementById('go');
 const skipBtn = document.getElementById('skip'), backBtn = document.getElementById('back');
 backBtn.innerHTML = svg('arrow');
 let i = 0, lastScale = 1;
@@ -372,6 +414,23 @@ function stateFor(k) {
 
 // Restore what they already said, and record anything they change. Runs on every render, so
 // going back shows their own answer rather than an empty field.
+// ⛔ `.textContent` turns "Salon or<br>barber" into "Salon orbarber". innerText honours the <br>.
+// Take the first line, collapse whitespace, and never let markup line-breaks reach a sentence.
+function label(node) {
+  // ⛔ This JS lives inside a Python f-string, so a newline escape must be written DOUBLED in the
+  // Python source or it becomes a real newline in the output, splits the JS string across two
+  // lines, and the WHOLE script fails to parse with "Invalid or unexpected token". The page still
+  // renders its static markup, so it looks alive while nothing works.
+  // ⭐ The comment that used to sit here explaining this contained the very bug it described: the
+  // escape inside it became a real newline, the second half stopped being a comment, and its
+  // orphaned backtick opened a template literal that swallowed the next twenty lines of code.
+  // Prose about an escaping rule is subject to the escaping rule. Say it in words, not symbols.
+  const t = node.querySelector('.oname, .cn, .holname, .tname') || node;
+  // JOIN the lines, do not take the first one: "Salon or<br>barber" is one label split across
+  // two lines, and keeping only line one produced "we will use the salon or question pack".
+  return (t.innerText || t.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+}
+
 function bindState(el, k) {
   const st = stateFor(k);
   if (!st.seeded) {
@@ -384,18 +443,41 @@ function bindState(el, k) {
     if (st[key]) f.textContent = st[key];
     f.addEventListener('input', () => { st[key] = f.textContent.trim(); });
   });
-  // tiles, chips and category cards all behave the same: tap to choose, choice persists
-  el.querySelectorAll('.tile, .chip, .cat, .opt').forEach((c, n) => {
-    const single = c.classList.contains('tile');
-    if (st.picked.has(n)) c.classList.add(single ? 'sel' : 'on');
-    c.addEventListener('click', () => {
-      if (single) {
-        el.querySelectorAll('.tile').forEach((o, m) => { o.classList.remove('sel'); st.picked.delete(m); });
-        c.classList.add('sel'); st.picked.add(n);
-      } else {
-        c.classList.toggle('on'); st.picked.has(n) ? st.picked.delete(n) : st.picked.add(n);
-      }
-    });
+  // ⛔⛔ THESE CONTROLS WERE VISUALLY DEAD AND I SHIPPED THEM. Everything that was not a `.tile`
+  // toggled the class `on` — but `.chip`, `.opt` and `.holrow` are all styled on `.sel`. So tapping
+  // a chip, an option or a calendar row changed a class nobody had written a rule for and produced
+  // NO visible change. `.holrow` was not even in the selector list, so the calendar was not
+  // clickable at all. Reza asked me to "make it actually work" and half the choice controls did
+  // not. My tests never caught it because they only ever clicked `.tile`, which happened to be the
+  // one kind that worked — ⭐ a test that exercises one member of a family proves nothing about
+  // the family.
+  // Each kind now declares its own state class and whether it is single- or multi-select.
+  const KINDS = [
+    { sel: '.tile',   cls: 'sel', single: true  },
+    { sel: '.opt',    cls: 'sel', single: true  },   // a radio: exactly one
+    { sel: '.chip',   cls: 'sel', single: false },
+    { sel: '.holrow', cls: 'sel', single: false },
+    { sel: '.cat',    cls: 'on',  single: false },
+  ];
+  KINDS.forEach(kind => {
+    const items = [...el.querySelectorAll(kind.sel)].filter(x => !x.classList.contains('ghost'));
+    if (!items.length) return;
+    const key = 'p_' + kind.sel;
+    if (!st[key]) {
+      // seed from whatever the markup shipped as already-chosen, once
+      st[key] = new Set(items.map((x, n) => x.classList.contains(kind.cls) ? n : -1).filter(n => n >= 0));
+    }
+    const paint = () => items.forEach((x, n) => x.classList.toggle(kind.cls, st[key].has(n)));
+    paint();
+    items.forEach((c, n) => c.addEventListener('click', () => {
+      if (kind.single) { st[key].clear(); st[key].add(n); }
+      else st[key].has(n) ? st[key].delete(n) : st[key].add(n);
+      paint();
+      // remember WHAT they chose, not just that they chose — the "knows" panel needs the words
+      st.labels = [...st[key]].map(m => label(items[m]));
+      refreshKnown(true);
+    }));
+    if (!st.labels) st.labels = [...st[key]].map(m => label(items[m]));
   });
 }
 
@@ -556,6 +638,87 @@ function create() {
         Nothing posts by itself.</p>
     </div>`,
   };
+}
+
+// ---------------------------------------------------------------------------------------------
+// WHAT SUARA ALREADY KNOWS — the interactive bit that shows value
+// ⭐ Every line is a CONSEQUENCE of an answer, never a repeat of it. Reza's standing test: does it
+// give them work, or tell them something they didn't know? "You picked halal" is an echo and fails.
+// "Halal is blocked and we will never write it" is news and passes. Where a screen has no genuine
+// consequence to report, it contributes NOTHING rather than padding the count — the number has to
+// mean something or the whole panel is decoration.
+// ---------------------------------------------------------------------------------------------
+const list = a => (a || []).slice(0, 3).join(', ') + ((a || []).length > 3 ? ` +${a.length - 3} more` : '');
+const CONSEQUENCE = {
+  'The name':        st => st.e0 && [`Posts will be signed “${st.e0}”`, 'Bottom right, same place every time'],
+  'Category':        st => st.labels?.length && [`We will use the ${st.labels[0].toLowerCase()} question pack`,
+                            'A different trade would ask you different things'],
+  'The wedding sentence': st => (st.voice && [`We have ${st.voice}s of your voice`,
+                            'Captions get written in your phrasing, not ours'])
+                            || (st.e0 && ['We will write the way you just described it', 'Your words set the tone']),
+  'Who buys':        st => st.labels?.length && [`Written for ${list(st.labels).toLowerCase()}`,
+                            'Not a persona we invented'],
+  'Last three customers': st => st.e0 && ['We lead with what people actually come in for',
+                            'Taken from your last three, not a guess'],
+  'The one ask':     st => st.labels?.length && [`Every post pushes toward ${list(st.labels).toLowerCase()}`,
+                            'One ask, so the feed does not pull in five directions'],
+  'Proof':           st => st.e0 && ['This review is the only praise we may use',
+                            'Anything we cannot trace back to you gets cut'],
+  'The wince list':  st => st.labels?.length && [`Blocked forever: ${list(st.labels).toLowerCase()}`,
+                            'We will not write these even if they would perform', true],
+  'Compliance':      st => st.labels?.length && [`We will never claim: ${list(st.labels).toLowerCase()}`,
+                            'The gate refuses the word, it does not just avoid it', true],
+  'The face':        st => st.labels?.length && [
+                            /nobody/i.test(st.labels[0]) ? 'No people appear in your content'
+                                                         : `${st.labels[0]} is the face of the content`,
+                            'Nobody shows up until they have said yes'],
+  'Logo':            st => st.labels?.length && ['Your mark goes on everything we make', 'Same corner, every post'],
+  'What is coming up': st => st.labels?.length && [`${list(st.labels)} already scheduled`,
+                            'We keep the calendar so you do not have to'],
+};
+
+function knownFacts() {
+  const out = [];
+  Q.forEach((s, n) => {
+    const st = answers[n + 1]; if (!st) return;
+    const f = CONSEQUENCE[s.t] && CONSEQUENCE[s.t](st);
+    if (f) out.push({ t: f[0], w: f[1], blocked: !!f[2] });
+  });
+  if (COLOURS.some((c, n) => c.toLowerCase() !== INIT_COLOURS[n].toLowerCase())) {
+    out.push({ t: `Your colours are locked to ${COLOURS.slice(0, 3).join(', ').toUpperCase()}`,
+                w: 'Every post we make uses these three' });
+  }
+  return out;
+}
+
+const knownBtn = document.getElementById('known');
+function refreshKnown(bump) {
+  const n = knownFacts().length;
+  knownBtn.hidden = i === 0;
+  const b = knownBtn.querySelector('b');
+  const changed = b.textContent !== String(n);
+  b.textContent = n;
+  knownBtn.querySelector('span').textContent = n === 1 ? 'Suara knows' : 'Suara knows';
+  if (bump && changed) {
+    knownBtn.classList.remove('bump'); void knownBtn.offsetWidth; knownBtn.classList.add('bump');
+  }
+}
+
+function openKnown() {
+  const f = knownFacts();
+  sheet.innerHTML = `<div class="cpgrab"></div>
+    <h4>${f.length ? `Suara knows ${f.length} thing${f.length > 1 ? 's' : ''} about you` : 'Nothing locked in yet'}</h4>
+    <p class="shsub">${f.length
+      ? 'Not what you typed — what it already decided about your content.'
+      : 'Answer a couple of questions and this fills up with what your answers have decided.'}</p>
+    ${f.length ? `<ul class="klist">${f.map(x =>
+        `<li class="${x.blocked ? 'blocked' : ''}"><span class="kd"></span>
+           <span class="kt">${x.t}<span class="kw">${x.w}</span></span></li>`).join('')}</ul>`
+      : '<p class="kempty">You can keep going and come back to this any time.</p>'}
+    <div class="cpfoot"><button class="pri" id="shDone">Back to the question</button></div>`;
+  sheet.querySelector('#shDone').addEventListener('click', () => closeSheet(false));
+  scrim.classList.add('on');
+  requestAnimationFrame(() => sheet.classList.add('on'));
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -760,10 +923,7 @@ function render(rev) {
   // ---- chrome: filled, never rebuilt, never scaled ----
   navrow.hidden = (i === 0);
   backBtn.hidden = (i === 0);
-  // ⛔ textContent, not innerHTML, printed "Skip &mdash; I will come back to this" verbatim on
-  // screen 5. The source copy contains HTML entities; textContent does not decode them. Caught in
-  // a screenshot, not by any assertion — so the entity check below now runs on every screen.
-  posEl.innerHTML = p.pos || '';
+  // the nav row now carries the live "knows" pill instead of a label repeating the question
   headEl.innerHTML = (p.eb || p.h || p.sub)
     ? `<div class="eyebrow anim" style="--d:0ms">${p.eb || ''}</div>
        <h1 class="anim" style="--d:30ms">${p.h || ''}</h1>
@@ -855,6 +1015,8 @@ function render(rev) {
   paintColours(el);
   el.querySelectorAll('#swat > div').forEach((d, n) => d.addEventListener('click', () => openSheet(n)));
   wireVoice(el, stateFor(i));
+  refreshKnown(false);
+  knownBtn.onclick = openKnown;
   el.querySelectorAll('.lang button').forEach(x => x.addEventListener('click', () => {
     el.querySelectorAll('.lang button').forEach(y => y.classList.remove('on'));
     x.classList.add('on');
