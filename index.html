@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP knows-panel-live-controls-r3 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP branded-pill-icons-by-name-r4 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -263,15 +263,59 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .known[hidden]{display:none}
 .known b{display:grid;place-items:center;min-width:19px;height:19px;border-radius:99px;
   background:#E1552E;color:#fff;font-size:11px;font-weight:800;padding:0 5px}
+/* the mark ships with a transparent background and its own warm gradient, so it needs no plate */
+.kmark{width:17px;height:17px;flex:none;display:block}
+/* ⭐ GRADIENT WORDMARK, WITH THE STOPS CHOSEN BY ARITHMETIC RATHER THAN BY EYE.
+   The mark's own ramp is #FF5A45 → #FFC24B, and #FFC24B on white is 1.58:1 — invisible. At 12px
+   bold this text needs 4.5:1, so the ramp is compressed to #C0341A → #AE6412, measured at 5.60:1
+   and 4.53:1. Same warm red-to-amber travel, still legible.
+   (We already shipped white-on-gold CTAs at 2.93:1 once — contrast is arithmetic, so compute it.) */
+.kbrand{font-style:normal;font-weight:800;
+  background:linear-gradient(100deg,#C0341A 0%,#C0491B 45%,#AE6412 100%);
+  -webkit-background-clip:text;background-clip:text;color:#C0341A}
+@supports (-webkit-background-clip:text) or (background-clip:text){
+  .kbrand{color:transparent}   /* only go transparent where the clip actually works */
+}
 @media (prefers-reduced-motion:no-preference){ .known.bump b{animation:bump 420ms var(--ease)} }
 @keyframes bump{0%{transform:scale(1)}45%{transform:scale(1.35)}100%{transform:scale(1)}}
-.klist{margin:0;padding:0;list-style:none;max-height:46vh;overflow-y:auto;overscroll-behavior:contain}
-.klist li{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid rgba(36,28,21,.07)}
-.klist li:last-child{border-bottom:0}
-.klist .kd{width:7px;height:7px;border-radius:50%;background:#2F6B3D;flex:none;margin-top:6px}
-.klist li.blocked .kd{background:#E1552E}
-.klist .kt{font-size:13.5px;line-height:1.45;color:#241C15}
-.klist .kw{display:block;font-size:11.5px;color:#A69A8A;margin-top:2px}
+/* ---------- the panel, redesigned ----------
+   Reza: "design the box that opens for suara knows can show the texts better". It was a flat
+   bullet list, so eleven equally-weighted lines arrived as a wall. Three changes do the work:
+   (1) SPLIT BY MEANING — what is locked in reads completely differently from what is blocked, and
+       they were interleaved. Two groups, and the blocked group is the one people remember.
+   (2) THE CONSEQUENCE IS THE HEADLINE, the reason is a quiet second line. Before, both were the
+       same size and you had to read all of it to find the point.
+   (3) A GLYPH PER ROW so the eye can skip — grouping by space, not by rules (better-layout #1). */
+.ksec{display:flex;align-items:center;gap:8px;margin:14px 0 8px;font-size:10px;font-weight:800;
+  letter-spacing:.14em;text-transform:uppercase;color:#A69A8A}
+.ksec:first-child{margin-top:4px}
+.ksec::after{content:"";flex:1;height:1px;background:rgba(36,28,21,.09)}
+.klist{margin:0;padding:0;list-style:none}
+/* the list scrolls, so it needs the same cue the answer area uses — a card sliced flat by the
+   button reads as broken, the same fade reads as "there is more". better-layout #5, and the point
+   of reusing the exact gradient is that the flow only teaches one signal for hidden content. */
+.kwrap{position:relative}
+.kwrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:30px;pointer-events:none;
+  background:linear-gradient(to top,#FFFDFA,rgba(255,253,250,0));opacity:0;transition:opacity 200ms}
+.kwrap.more::after{opacity:1}
+.kscroll{max-height:42vh;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;
+  margin:0 -4px;padding:0 4px 6px}
+.kscroll::-webkit-scrollbar{display:none}
+.klist li{display:flex;gap:11px;align-items:flex-start;background:#fff;border-radius:14px;
+  border:1px solid rgba(36,28,21,.08);padding:11px 12px;margin-bottom:7px;
+  box-shadow:0 2px 6px -4px rgba(36,28,21,.3)}
+.klist .kd{width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
+  background:#EAF2EC}
+.klist .kd svg{width:15px;height:15px;stroke:#2F6B3D;stroke-width:2.2;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.klist li.blocked{border-color:rgba(225,85,46,.28);background:#FFF7F4}
+.klist li.blocked .kd{background:#FBE3DA}
+.klist li.blocked .kd svg{stroke:#C0341A}
+.klist .kt{font-size:13.5px;line-height:1.35;color:#241C15;font-weight:700;letter-spacing:-.005em}
+.klist .kw{display:block;font-size:11.5px;line-height:1.4;color:#A69A8A;margin-top:3px;
+  font-weight:500}
+.khead{display:flex;align-items:center;gap:9px;margin-bottom:2px}
+.khead img{width:24px;height:24px;flex:none}
 .kempty{font-size:13.5px;color:#A69A8A;line-height:1.5;padding:6px 0 2px}
 
 /* ---------- the voice screen, given the welcome treatment ----------
@@ -375,7 +419,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 <div class="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
   <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
-    <button class="known" id="known" hidden><span>Suara knows</span><b>0</b></button></div>
+    <button class="known" id="known" hidden><img class="kmark" src="suara-mark.svg" alt=""><span><i class="kbrand">Suara</i> knows</span><b>0</b></button></div>
   <div class="head" id="head"></div>
   <div class="stage" id="stage"></div>
   <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
@@ -532,10 +576,42 @@ function makeTypeable(html) {
       '<div class="noteph" contenteditable="true" spellcheck="false" data-ph="$1"></div>');
 }
 
-function fixIcons(html) {
-  return (html || '')
-    .replace(/<path d="M20\.8 [^"]*"\/>|<path d="M12 21[^"]*"\/>/g, IC.stetho)
-    .replace(/<path d="M14\.7 6\.3[^"]*"\/>/g, IC.wrench);
+// ⛔⛔⛔ REZA REPORTED THE CATEGORY ICONS THREE TIMES. Here is why they never got fixed.
+// The old version of this function was two regexes matching path DATA: /<path d="M20\.8 …/ and
+// /<path d="M14\.7 6\.3…/. The real paths in screens-data.js begin `M20.5 8.6` and `M14.5 5.5`.
+// NEITHER REGEX EVER MATCHED ANYTHING. String.replace returns its input unchanged and reports
+// nothing, so both "fixes" I shipped were no-ops — and I told him they were done. The offender is
+// the trades glyph, which renders as an unreadable sliver: exactly "truncated".
+// ⇒ Icons are now keyed BY CATEGORY NAME and swapped on the live DOM, and any tile we don't have
+// an icon for is pushed to `window.__iconMisses` so a test can fail on it. A silent no-op is not
+// allowed to be the outcome a third time.
+const TILEICON = {
+  'cafe or restaurant': '<path d="M4 8h13v6a5 5 0 01-5 5H9a5 5 0 01-5-5V8z"/><path d="M17 9h1.8a2.7 2.7 0 010 5.4H17"/><path d="M6 3.5v1.6M10 3v2M14 3.5v1.6"/>',
+  'salon or barber':    '<circle cx="6" cy="6" r="2.6"/><circle cx="6" cy="18" r="2.6"/><path d="M8 8l12 10M20 6L8.6 16"/>',
+  // a heart said "cardiology", not "clinic or aesthetics" — a stethoscope is unambiguous
+  'clinic or aesthetics': '<path d="M7 3v5.5a5 5 0 0010 0V3"/><path d="M5.4 3h3.2M13.4 3h3.2"/><path d="M12 13.5v1.4a4 4 0 008 0v-1.2"/><circle cx="20" cy="11.6" r="1.9"/>',
+  'shop or product':    '<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8V6a3 3 0 016 0v2"/>',
+  // ⛔ Was an unrecognisable wedge — this is the glyph Reza kept calling truncated. First
+  // replacement was a hard hat, which at 21px read as a serving cloche, so it went too. A toolbox
+  // survives the size: straight body, trapezoid handle, one latch line. Distinct from the shop bag
+  // beside it, which is tapered with a round handle. ⭐ Judge an icon at its RENDERED size, in a
+  // crop — the hard hat looked correct in the path data and wrong on the screen.
+  'trades and home':    '<path d="M3 9.5h18V19a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19V9.5z"/><path d="M8.5 9.5V7a2 2 0 012-2h3a2 2 0 012 2v2.5"/><path d="M3 14h18"/>',
+  'classes or studio':  '<path d="M4 4h7a3 3 0 013 3v13a2.5 2.5 0 00-2.5-2.5H4V4z"/><path d="M20 4h-3a3 3 0 00-3 3v13a2.5 2.5 0 012.5-2.5H20V4z"/>',
+};
+window.__iconMisses = [];
+function fixIcons(root) {
+  root.querySelectorAll('.tile').forEach(t => {
+    const svg = t.querySelector('svg'); if (!svg) return;
+    const name = ((t.querySelector('.tname') || t).innerText || '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const path = TILEICON[name];
+    if (!path) { window.__iconMisses.push(name); return; }
+    svg.innerHTML = path;                       // keeps whatever stroke colour the tile already set
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke-width', '2.1');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+  });
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -622,7 +698,7 @@ function question(s) {
     btn: noTotal(s.btn) || 'Continue',
     skip: s.skip || '',
     body: `<div class="body"><div class="anim" style="--d:40ms">${
-      makeTypeable(fixIcons(noTotal(s.body)))}</div></div>`,
+      makeTypeable(noTotal(s.body))}</div></div>`,
   };
 }
 
@@ -698,25 +774,63 @@ function refreshKnown(bump) {
   const b = knownBtn.querySelector('b');
   const changed = b.textContent !== String(n);
   b.textContent = n;
-  knownBtn.querySelector('span').textContent = n === 1 ? 'Suara knows' : 'Suara knows';
+
   if (bump && changed) {
     knownBtn.classList.remove('bump'); void knownBtn.offsetWidth; knownBtn.classList.add('bump');
   }
 }
 
+const KICON = {
+  lock:    '<rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/>',
+  no:      '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
+  voice:   '<path d="M12 15.5a3.5 3.5 0 003.5-3.5V6a3.5 3.5 0 00-7 0v6a3.5 3.5 0 003.5 3.5z"/><path d="M5.5 11.5A6.5 6.5 0 0018.5 11.5M12 18.5V22"/>',
+  people:  '<path d="M3 20a7 7 0 0114 0"/><circle cx="10" cy="8" r="3.6"/><path d="M16 12a5 5 0 015 8"/>',
+  cal:     '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 2.6v4.2M16 2.6v4.2M3.5 10h17"/>',
+  quote:   '<path d="M4.5 12.5v-3a3 3 0 013-3h1v6h-4zM14.5 12.5v-3a3 3 0 013-3h1v6h-4z"/><path d="M4.5 12.5c0 3 1.5 4.5 4 5M14.5 12.5c0 3 1.5 4.5 4 5"/>',
+  brush:   '<path d="M4 20l4-1 9.5-9.5a2.5 2.5 0 00-3.5-3.5L4.5 15.5 4 20z"/>',
+  target:  '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>',
+};
+// which glyph goes with which consequence — matched on the sentence we already wrote, so a new
+// fact never renders a blank tile
+function kicon(x) {
+  if (x.blocked) return KICON.no;
+  const t = x.t.toLowerCase();
+  if (/voice|phrasing|describ/.test(t)) return KICON.voice;
+  if (/written for|come in for|face of|appear/.test(t)) return KICON.people;
+  if (/scheduled|calendar/.test(t)) return KICON.cal;
+  if (/review|praise|quote/.test(t)) return KICON.quote;
+  if (/colour|mark goes|signed/.test(t)) return KICON.brush;
+  if (/pushes toward|question pack/.test(t)) return KICON.target;
+  return KICON.lock;
+}
+
 function openKnown() {
   const f = knownFacts();
+  const locked = f.filter(x => !x.blocked), blocked = f.filter(x => x.blocked);
+  const row = x => `<li class="${x.blocked ? 'blocked' : ''}">
+      <span class="kd"><svg viewBox="0 0 24 24">${kicon(x)}</svg></span>
+      <span class="kt">${x.t}<span class="kw">${x.w}</span></span></li>`;
+  const group = (title, items) => items.length
+    ? `<div class="ksec">${title}</div><ul class="klist">${items.map(row).join('')}</ul>` : '';
   sheet.innerHTML = `<div class="cpgrab"></div>
-    <h4>${f.length ? `Suara knows ${f.length} thing${f.length > 1 ? 's' : ''} about you` : 'Nothing locked in yet'}</h4>
+    <div class="khead"><img src="suara-mark.svg" alt="">
+      <h4><i class="kbrand">Suara</i> knows ${f.length || 'nothing yet'}</h4></div>
     <p class="shsub">${f.length
-      ? 'Not what you typed — what it already decided about your content.'
+      ? 'Not what you typed — what your answers already decided about your content.'
       : 'Answer a couple of questions and this fills up with what your answers have decided.'}</p>
-    ${f.length ? `<ul class="klist">${f.map(x =>
-        `<li class="${x.blocked ? 'blocked' : ''}"><span class="kd"></span>
-           <span class="kt">${x.t}<span class="kw">${x.w}</span></span></li>`).join('')}</ul>`
+    ${f.length ? `<div class="kwrap"><div class="kscroll">
+        ${group('Locked in', locked)}${group('Never again', blocked)}
+      </div></div>`
       : '<p class="kempty">You can keep going and come back to this any time.</p>'}
     <div class="cpfoot"><button class="pri" id="shDone">Back to the question</button></div>`;
   sheet.querySelector('#shDone').addEventListener('click', () => closeSheet(false));
+  // show the fade only when something is genuinely below the fold, and drop it at the end —
+  // a permanent fade is decoration and stops meaning anything
+  const wrap = sheet.querySelector('.kwrap'), sc = sheet.querySelector('.kscroll');
+  if (wrap && sc) {
+    const upd = () => wrap.classList.toggle('more', sc.scrollTop + sc.clientHeight < sc.scrollHeight - 4);
+    sc.addEventListener('scroll', upd); requestAnimationFrame(upd);
+  }
   scrim.classList.add('on');
   requestAnimationFrame(() => sheet.classList.add('on'));
 }
@@ -1014,6 +1128,7 @@ function render(rev) {
   // colour changed and then revisited shows the change rather than the value baked into the markup.
   paintColours(el);
   el.querySelectorAll('#swat > div').forEach((d, n) => d.addEventListener('click', () => openSheet(n)));
+  fixIcons(el);            // swap category glyphs on the live DOM, by name, and record misses
   wireVoice(el, stateFor(i));
   refreshKnown(false);
   knownBtn.onclick = openKnown;
