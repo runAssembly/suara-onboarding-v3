@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suara onboarding v3</title>
-<!-- BUILDSTAMP branded-pill-icons-by-name-r4 — a string written in THIS build. The deploy probe greps
+<!-- BUILDSTAMP tight-mark-brand-palette-r5 — a string written in THIS build. The deploy probe greps
      for this, not for "the page loads": a reachable page that serves the PREVIOUS build passes a
      liveness check and tells you nothing. Bump it whenever the build changes materially. -->
 <link rel="stylesheet" href="flow-shared.css">
@@ -255,7 +255,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
    ⭐ It lists CONSEQUENCES, not an echo. Reza's own standing test is "does it give them work, or
    tell them something they didn't know?" — a summary of what they just typed fails that test.
    "Halal is now blocked and we will never write it" passes it. */
-.known{margin-left:auto;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid
+.known{margin-left:auto;display:flex;align-items:center;gap:6px;background:#fff;border:1px solid
   rgba(36,28,21,.1);border-radius:100px;padding:6px 12px 6px 9px;font:inherit;font-size:12px;
   font-weight:700;color:#241C15;cursor:pointer;white-space:nowrap;
   box-shadow:0 3px 10px -7px rgba(36,28,21,.5);transition:transform 140ms var(--ease)}
@@ -264,7 +264,9 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .known b{display:grid;place-items:center;min-width:19px;height:19px;border-radius:99px;
   background:#E1552E;color:#fff;font-size:11px;font-weight:800;padding:0 5px}
 /* the mark ships with a transparent background and its own warm gradient, so it needs no plate */
-.kmark{width:17px;height:17px;flex:none;display:block}
+/* the tight mark is 428x214 of ink, so a 2:1 box — no padding to see through, which means the
+   gap below is the whole gap. 6px, not 7px+1.4px of the asset's own dead space. */
+.kmark{width:18px;height:9px;flex:none;display:block}
 /* ⭐ GRADIENT WORDMARK, WITH THE STOPS CHOSEN BY ARITHMETIC RATHER THAN BY EYE.
    The mark's own ramp is #FF5A45 → #FFC24B, and #FFC24B on white is 1.58:1 — invisible. At 12px
    bold this text needs 4.5:1, so the ramp is compressed to #C0341A → #AE6412, measured at 5.60:1
@@ -304,18 +306,27 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 .klist li{display:flex;gap:11px;align-items:flex-start;background:#fff;border-radius:14px;
   border:1px solid rgba(36,28,21,.08);padding:11px 12px;margin-bottom:7px;
   box-shadow:0 2px 6px -4px rgba(36,28,21,.3)}
+/* ⛔ THESE WERE GREEN AND REZA CALLED IT: "why did u use green icons... how is that a good
+   redesign". He was right twice over. Green is not in the Suara palette — it was a generic
+   success-green I reached for — and pairing it with coral made a red/green traffic light, which is
+   the laziest signal there is and reads as a form validation state, not as a brand.
+   ⭐ The fix is to stop using colour as the group divider at all. The sections already say "Locked
+   in" and "Never again" in words. So locked-in rows are neutral sand and ink, and CORAL APPEARS
+   EXACTLY ONCE IN THE PANEL — on the things we will never write. Colour earns its meaning by being
+   rare; spend it on the one row type that matters and it lands. */
 .klist .kd{width:28px;height:28px;border-radius:9px;flex:none;display:grid;place-items:center;
-  background:#EAF2EC}
-.klist .kd svg{width:15px;height:15px;stroke:#2F6B3D;stroke-width:2.2;fill:none;
+  background:#F4EBDD}
+.klist .kd svg{width:15px;height:15px;stroke:#3B3128;stroke-width:2.2;fill:none;
   stroke-linecap:round;stroke-linejoin:round}
-.klist li.blocked{border-color:rgba(225,85,46,.28);background:#FFF7F4}
-.klist li.blocked .kd{background:#FBE3DA}
-.klist li.blocked .kd svg{stroke:#C0341A}
+.klist li.blocked{border-color:rgba(225,85,46,.3);background:#FFF6F2}
+.klist li.blocked .kd{background:#F6D9CD}
+.klist li.blocked .kd svg{stroke:#B23A17}
+.klist li.blocked .kt{color:#7A2E14}
 .klist .kt{font-size:13.5px;line-height:1.35;color:#241C15;font-weight:700;letter-spacing:-.005em}
 .klist .kw{display:block;font-size:11.5px;line-height:1.4;color:#A69A8A;margin-top:3px;
   font-weight:500}
 .khead{display:flex;align-items:center;gap:9px;margin-bottom:2px}
-.khead img{width:24px;height:24px;flex:none}
+.khead img{width:26px;height:13px;flex:none}
 .kempty{font-size:13.5px;color:#A69A8A;line-height:1.5;padding:6px 0 2px}
 
 /* ---------- the voice screen, given the welcome treatment ----------
@@ -419,7 +430,7 @@ h1{font-size:clamp(17px, calc(27*var(--u)), 29px);line-height:1.14;letter-spacin
 <div class="shell">
   <div class="bar"><i id="fill" style="width:0%"></i></div>
   <div class="navrow" id="navrow"><button class="back" id="back" aria-label="Back"></button>
-    <button class="known" id="known" hidden><img class="kmark" src="suara-mark.svg" alt=""><span><i class="kbrand">Suara</i> knows</span><b>0</b></button></div>
+    <button class="known" id="known" hidden><img class="kmark" src="suara-mark-tight.svg" alt=""><span><i class="kbrand">Suara</i> knows</span><b>0</b></button></div>
   <div class="head" id="head"></div>
   <div class="stage" id="stage"></div>
   <div class="foot" id="foot"><button class="btn" id="go">Continue</button>
@@ -813,7 +824,7 @@ function openKnown() {
   const group = (title, items) => items.length
     ? `<div class="ksec">${title}</div><ul class="klist">${items.map(row).join('')}</ul>` : '';
   sheet.innerHTML = `<div class="cpgrab"></div>
-    <div class="khead"><img src="suara-mark.svg" alt="">
+    <div class="khead"><img src="suara-mark-tight.svg" alt="">
       <h4><i class="kbrand">Suara</i> knows ${f.length || 'nothing yet'}</h4></div>
     <p class="shsub">${f.length
       ? 'Not what you typed — what your answers already decided about your content.'
